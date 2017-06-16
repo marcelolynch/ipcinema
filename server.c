@@ -1,4 +1,5 @@
 #include "sockets.h"
+#include "errors.h"
 
 
 #include <stdio.h>
@@ -22,15 +23,18 @@ typedef struct ti{
 
 
 int main(int argc, char*argv[]){
+    if (argc != 2) fatal("Usage: server server-port-number");
 
-	Address srv = open_socket("localhost", SERVER_PORT);
+	Address srv = open_socket("localhost", atoi(argv[1]));
 	socket_bind(srv);
 
 	while(1){
 		Connection con = accept_connection(srv);
+        printf("New connection\n");
 		new_thread(con);
 	}
 
+    printf("exiting");
 }
 
 
@@ -53,9 +57,13 @@ static void * thread_work(void* data){
  
     while(1){
         bzero(buffer,1024);
-        receive_message(info->connection,buffer);
-        printf("Here is the message: %s\n",buffer);
-        send_message(info->connection,"I got your message");
+        if(receive_message(info->connection,buffer)){
+            printf("Here is the message: %s\n",buffer);
+            send_message(info->connection,"I got your message");
+        } else{
+            printf("Broken pipe");
+            break;
+        }
     }
      
      return 0; 

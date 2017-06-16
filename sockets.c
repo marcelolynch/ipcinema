@@ -82,12 +82,12 @@ Connection connect_to_socket(Address addr){
 
 
 
-void receive_message(Connection con, char* buf){
-	read(con->fd, buf, BUF_SIZE); /* read file name from socket */
+int receive_message(Connection con, char* buf){
+	return read(con->fd, buf, BUF_SIZE); /* read file name from socket */
 }
 
-void send_message(Connection con, char* buf){
-	write(con->fd, buf, strlen(buf));
+int send_message(Connection con, char* buf){
+	return write(con->fd, buf, strlen(buf));
 }
 
 

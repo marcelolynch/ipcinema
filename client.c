@@ -13,15 +13,17 @@
 
 int main(int argc, char*argv[]){
   
-  if (argc != 2) fatal("Usage: client server-name");
+  if (argc != 3) fatal("Usage: client server-name server-port-number");
 
-	ClientInstance cli = new_client(argv[1]);
+	ClientInstance cli = new_client(argv[1], atoi(argv[2]));
 
 	char buf[1024];
 	while(1){
 		memset(buf, 0, 1024); 
 		fgets(buf,255,stdin);
 		client_send(cli, buf);
+		client_rcv(cli, buf);
+		printf("%s", buf);
 	}
 
 }
