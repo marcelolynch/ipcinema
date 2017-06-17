@@ -22,6 +22,8 @@ int main(int argc, char*argv[]){
 		memset(buf, 0, 1024); 
 		fgets(buf,255,stdin);
 		client_send(cli, buf);
+
+		memset(buf, 0, 1024); 
 		client_rcv(cli, buf);
 		printf("%s", buf);
 	}

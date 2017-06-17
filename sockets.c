@@ -12,7 +12,6 @@
 
 
 #define MAX_CONNECTIONS 10
-#define BUF_SIZE 1024
 
 struct AddressCDT{
 	int sockfd;
@@ -83,7 +82,7 @@ Connection connect_to_socket(Address addr){
 
 
 int receive_message(Connection con, char* buf){
-	return read(con->fd, buf, BUF_SIZE); /* read file name from socket */
+	return read(con->fd, buf, BUF_SIZE); /* read from socket */
 }
 
 int send_message(Connection con, char* buf){

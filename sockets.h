@@ -1,6 +1,7 @@
 typedef struct AddressCDT* Address;
 typedef struct ConnectionCDT* Connection;
 
+#define BUF_SIZE 1024
 
 Connection connect_to_socket(Address addr);
 
