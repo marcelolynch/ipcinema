@@ -1,6 +1,5 @@
 #include "errors.h"
 #include "fakedb.h"
-#include "sockets.h"
 #include "server.h"
 #include "server_marshalling.h"
 
@@ -20,41 +19,43 @@
 #define SERVER_PORT 12345 
 
 static void * thread_work(void* data);
-int new_thread(Connection con);
+static void reservation(ClientSession session, ReservationRequest request);
+
+int new_thread(ClientSession client);
 
 
 typedef struct ti{
-    Connection connection;
+    ClientSession session;
     int number;
 } ThreadInfo;
 
 
-sem_t mtx;
+pthread_mutex_t mtx;
 
 int main(int argc, char*argv[]){
     srand(time(0));
     if (argc != 2) fatal("Usage: server server-port-number");
 
-	Address srv = open_socket("localhost", atoi(argv[1]));
-	socket_bind(srv);
-
-    sem_init(&mtx, 0, 1);
+    ServerInstance server = server_init("localhost", atoi(argv[1]));
+   
+    pthread_mutex_init(&mtx, NULL);
 
 	while(1){
-		Connection con = accept_connection(srv);
+		ClientSession cli = wait_client(server);
         printf("New connection\n");
-		new_thread(con);
+		new_thread(cli);
 	}
 
     printf("exiting");
 }
 
+
 int num = 0;
-int new_thread(Connection con){
+int new_thread(ClientSession client){
     pthread_t thread;
 
     ThreadInfo* info = malloc(sizeof(ThreadInfo));
-    info->connection = con;
+    info->session = client;
     info->number = num++;
     
     return pthread_create(&thread, NULL, thread_work, info);
@@ -66,11 +67,13 @@ static void * thread_work(void* data){
 
     int n, waiting=1;
     ThreadInfo* info = (ThreadInfo*)data;
-    
+    ClientSession session = info->session;
+
     while(1){
         
-        ClientRequest * req = wait_request(info->connection);
+        ClientRequest * req = wait_request(info->session);
         if(req == NULL){
+            client_send(session, "Not valid dude\n");
             continue;
         } 
 
@@ -78,19 +81,7 @@ static void * thread_work(void* data){
             case RESERVATION:
             {
                 ReservationRequest res = (ReservationRequest)req->data;
-                int status;
-                
-                sleep(1+rand()%3);
-                sem_wait(&mtx); //Enter critical zone
-                status = reserve_seat(res->auditorium, res->seat);
-                sem_post(&mtx); //Exit critical zone
-
-                if(status < 0){
-                    send_message(info->connection, "Failure: seat was reserved\n");
-                } else{
-                    send_message(info->connection,"Success!\n");
-                }
-                
+                reservation(session, res);
                 break;
             }
             case SEAT_INFO:
@@ -104,4 +95,22 @@ static void * thread_work(void* data){
      
      return 0; 
 
+}
+
+
+static void reservation(ClientSession session, ReservationRequest request){
+        int status;
+                
+        sleep(3+rand()%10);  //Testing
+
+        pthread_mutex_lock(&mtx); //Enter critical zone
+        status = reserve_seat(request->auditorium, request->seat);
+        pthread_mutex_unlock(&mtx); //Exit critical zone
+        
+        if(status < 0){
+            client_send(session, "Failure: seat was reserved\n");
+        } else{
+            client_send(session,"Success!\n");
+        }
+                
 }

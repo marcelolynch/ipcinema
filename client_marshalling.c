@@ -1,5 +1,7 @@
 #include "sockets.h"
 #include "client_marshalling.h"
+#include "protocol.h"
+
 #include <stdlib.h>
 
 
@@ -18,6 +20,12 @@ ClientInstance new_client(char* srv, int portno){
 	instance->connection = con;
 
 	return instance;
+}
+
+
+void reserveSeat(int room, int seat){
+	char reserve[]
+	
 }
 
 

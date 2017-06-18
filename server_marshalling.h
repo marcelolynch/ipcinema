@@ -1,6 +1,15 @@
 #ifndef __srv_mrsh_h
 #define __srv_mrsh_h
 
-ClientRequest * wait_request(Connection con);
+
+typedef struct serverinstanceCDT* ServerInstance;
+typedef struct clientsessionCDT* ClientSession;
+
+
+ClientRequest * wait_request(ClientSession cli);
+ClientSession wait_client(ServerInstance srv);
+ServerInstance server_init(char* hostname, int port);
+
+void client_send(ClientSession client, char* msg);
 
 #endif
