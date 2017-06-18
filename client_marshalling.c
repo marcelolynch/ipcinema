@@ -24,8 +24,6 @@ ClientInstance new_client(char* srv, int portno){
 
 
 void reserveSeat(int room, int seat){
-	char reserve[]
-	
 }
 
 

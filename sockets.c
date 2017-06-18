@@ -31,26 +31,30 @@ Address open_socket(char* hostname, int port){
 
 	con->sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
  
-	bzero((char *) &con->addr, sizeof(con->addr));
+ 	//Clear de la estructura por las dudas
+	memset((char *)&con->addr, 0, sizeof(con->addr));
+    
     con->addr.sin_family = AF_INET;
     con->addr.sin_port = htons(port);
 	
 
-	if(hostname != NULL ){
+	if(hostname == NULL){
+		//Si hostname es NULL, usar INADDR_ANY
+		con->addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	}
+	else{
+		//Utilizar el host indicado
 		struct hostent* h = gethostbyname(hostname);
 	    memcpy(&con->addr.sin_addr.s_addr, h->h_addr, h->h_length);
 	}
-	else{
-		con->addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	}
-	
+
     return con;
 
 }
 
 
 int socket_bind(Address a){
-	    if (bind(a->sockfd, (struct sockaddr *)&a->addr,
+    if (bind(a->sockfd, (struct sockaddr *)&a->addr,
               sizeof(a->addr)) < 0){
     		fatal("Bind failed");
           }
@@ -59,6 +63,7 @@ int socket_bind(Address a){
     	fatal("listen failed");
     }
 
+    return 1;
 }
 
 

@@ -1,6 +1,7 @@
 #include "errors.h"
 #include "fakedb.h"
 #include "server.h"
+#include "server_logging.h"
 #include "server_marshalling.h"
 
 #include <stdio.h>
@@ -36,13 +37,16 @@ int main(int argc, char*argv[]){
     srand(time(0));
     if (argc != 2) fatal("Usage: server server-port-number");
 
+    set_log();
+
     ServerInstance server = server_init(atoi(argv[1]));
    
     pthread_mutex_init(&mtx, NULL);
 
 	while(1){
 		ClientSession cli = wait_client(server);
-        printf("New connection\n");
+
+        srv_log("New connection\n");
 		new_thread(cli);
 	}
 
@@ -65,7 +69,6 @@ int new_thread(ClientSession client){
 
 static void * thread_work(void* data){
 
-    int n, waiting=1;
     ThreadInfo* info = (ThreadInfo*)data;
     ClientSession session = info->session;
 
@@ -108,8 +111,10 @@ static void reservation(ClientSession session, ReservationRequest request){
         pthread_mutex_unlock(&mtx); //Exit critical zone
         
         if(status < 0){
+            srv_log("Seat not reserved\n");
             client_send(session, "Failure: seat was reserved\n");
         } else{
+            srv_log("Seat reserved\n");
             client_send(session,"Success!\n");
         }
                 

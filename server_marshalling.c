@@ -2,6 +2,7 @@
 #include "sockets.h"
 #include "errors.h"
 #include "server_marshalling.h"
+#include "server_logging.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +55,8 @@ ClientRequest * wait_request(ClientSession cli){
 		fatal("Error in receive");
 	}
 
-	printf("received: %s\n", buf);
+
+	srv_log("Received request");
 	ClientRequest * req = malloc(sizeof(*req));
 
 	if(strncmp(buf, "reserve", strlen("reserve")) == 0){
