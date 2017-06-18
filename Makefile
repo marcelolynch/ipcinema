@@ -10,7 +10,7 @@ LOG_SOURCES = logger.c
 
 SERVER_BINARY = server.bin
 CLIENT_BINARY = client.bin
-LOG_BINARY = log.bin
+LOG_BINARY = logger.bin
 
 all: client server log
 
