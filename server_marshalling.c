@@ -23,10 +23,10 @@ typedef struct clientsessionCDT* ClientSession;
 
 
 
-ServerInstance server_init(char* hostname, int port){
+ServerInstance server_init(int port){
 	ServerInstance session = malloc(sizeof(struct serverinstanceCDT));
 
-	session->addr = open_socket(hostname, port);
+	session->addr = open_socket(NULL, port);
 	socket_bind(session->addr);
 
 	return session;

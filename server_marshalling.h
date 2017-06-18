@@ -8,7 +8,8 @@ typedef struct clientsessionCDT* ClientSession;
 
 ClientRequest * wait_request(ClientSession cli);
 ClientSession wait_client(ServerInstance srv);
-ServerInstance server_init(char* hostname, int port);
+
+ServerInstance server_init(int port);
 
 void client_send(ClientSession client, char* msg);
 

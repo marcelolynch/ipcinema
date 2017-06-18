@@ -29,15 +29,21 @@ struct ConnectionCDT{
 Address open_socket(char* hostname, int port){
 	Address con = malloc(sizeof(struct AddressCDT));
 
-	struct hostent* h = gethostbyname(hostname);
-
 	con->sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    bzero((char *) &con->addr, sizeof(con->addr));
-
+ 
+	bzero((char *) &con->addr, sizeof(con->addr));
     con->addr.sin_family = AF_INET;
-    memcpy(&con->addr.sin_addr.s_addr, h->h_addr, h->h_length);
     con->addr.sin_port = htons(port);
+	
 
+	if(hostname != NULL ){
+		struct hostent* h = gethostbyname(hostname);
+	    memcpy(&con->addr.sin_addr.s_addr, h->h_addr, h->h_length);
+	}
+	else{
+		con->addr.sin_addr.s_addr = htonl(INADDR_ANY);
+	}
+	
     return con;
 
 }

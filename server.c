@@ -36,7 +36,7 @@ int main(int argc, char*argv[]){
     srand(time(0));
     if (argc != 2) fatal("Usage: server server-port-number");
 
-    ServerInstance server = server_init("localhost", atoi(argv[1]));
+    ServerInstance server = server_init(atoi(argv[1]));
    
     pthread_mutex_init(&mtx, NULL);
 
