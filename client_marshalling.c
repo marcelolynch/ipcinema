@@ -27,11 +27,11 @@ void reserveSeat(int room, int seat){
 }
 
 
-void client_send(ClientInstance instance, char * msg){
-	send_message(instance->connection, msg);
+int client_send(ClientInstance instance, char * msg){
+	return send_message(instance->connection, msg);
 }
 
 
-void client_rcv(ClientInstance instance, char* buf){
-	receive_message(instance->connection, buf);
+int client_rcv(ClientInstance instance, char* buf){
+	return receive_message(instance->connection, buf);
 }

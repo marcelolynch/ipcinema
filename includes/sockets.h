@@ -14,3 +14,4 @@ int receive_message(Connection con, char* buf);
 int send_message(Connection con, char* buf);
 
 Connection accept_connection(Address addr);
+void destroy_connection(Connection c);

@@ -46,11 +46,18 @@ int main(int argc, char*argv[]){
 	while(1){
 		ClientSession cli = wait_client(server);
 
-        srv_log("New connection\n");
-		new_thread(cli);
+        if(cli != NULL){
+
+          srv_log("New connection");
+		  new_thread(cli);
+       
+        } else {
+            srv_log("Unsucessful connection attempt");
+        }
 	}
 
-    printf("exiting");
+    srv_log("Exiting");
+    return 1;
 }
 
 
@@ -104,7 +111,7 @@ static void * thread_work(void* data){
 static void reservation(ClientSession session, ReservationRequest request){
         int status;
                 
-        sleep(3+rand()%10);  //Testing
+        sleep(3+rand()%6);  //Testing
 
         pthread_mutex_lock(&mtx); //Enter critical zone
         status = reserve_seat(request->auditorium, request->seat);

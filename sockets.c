@@ -27,9 +27,15 @@ struct ConnectionCDT{
 
 
 Address open_socket(char* hostname, int port){
-	Address con = malloc(sizeof(struct AddressCDT));
 
-	con->sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	int fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	
+	if(fd < 0){
+		return NULL;
+	}
+
+	Address con = malloc(sizeof(struct AddressCDT));
+	con->sockfd = fd;	
  
  	//Clear de la estructura por las dudas
 	memset((char *)&con->addr, 0, sizeof(con->addr));
@@ -45,36 +51,44 @@ Address open_socket(char* hostname, int port){
 	else{
 		//Utilizar el host indicado
 		struct hostent* h = gethostbyname(hostname);
+		if(h == NULL){
+			free(con);
+			return NULL;
+		}
 	    memcpy(&con->addr.sin_addr.s_addr, h->h_addr, h->h_length);
 	}
 
     return con;
-
 }
 
 
 int socket_bind(Address a){
-    if (bind(a->sockfd, (struct sockaddr *)&a->addr,
-              sizeof(a->addr)) < 0){
-    		fatal("Bind failed");
-          }
+
+    if (bind(a->sockfd, (struct sockaddr *)&a->addr, sizeof(a->addr)) < 0){
+    	return -1;
+    }
     
-    if(listen(a->sockfd,MAX_CONNECTIONS) < 0){
-    	fatal("listen failed");
+    if(listen(a->sockfd, MAX_CONNECTIONS) < 0){
+    	return -2;
     }
 
-    return 1;
+    return 0;
 }
 
 
 Connection accept_connection(Address addr){
-	Connection con = malloc(sizeof(struct ConnectionCDT));
 	int s = accept(addr->sockfd, 0, 0);
 	if(s < 0){
-		fatal("Accept failed");
+		return NULL;
 	}
+	Connection con = malloc(sizeof(struct ConnectionCDT));
 	con->fd = s;
 	return con;
+}
+
+
+void destroy_connection(Connection c){
+	free(c);
 }
 
 
@@ -97,7 +111,7 @@ int receive_message(Connection con, char* buf){
 }
 
 int send_message(Connection con, char* buf){
-	return write(con->fd, buf, strlen(buf));
+	return send(con->fd, buf, strlen(buf), MSG_NOSIGNAL);
 }
 
 

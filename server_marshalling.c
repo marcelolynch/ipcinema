@@ -28,17 +28,41 @@ ServerInstance server_init(int port){
 	ServerInstance session = malloc(sizeof(struct serverinstanceCDT));
 
 	session->addr = open_socket(NULL, port);
-	socket_bind(session->addr);
+
+	if(session->addr == NULL){
+		srv_log("Socket opening failed");
+		free(session);
+		return NULL;
+	}
+
+	if(socket_bind(session->addr) < 0){
+		srv_log("Socket binding failed");
+		free(session);
+		return NULL;
+	}
 
 	return session;
 } 
 
 
 ClientSession wait_client(ServerInstance srv){
-	ClientSession cli = malloc(sizeof(struct clientsessionCDT));
-	cli->con = accept_connection(srv->addr);
+	Connection c = accept_connection(srv->addr);
 	
-	return cli;		
+	if(c == NULL){
+		srv_log("Error establishing connection with client");
+		return NULL;
+	}
+
+	ClientSession cli = malloc(sizeof(struct clientsessionCDT));
+	cli->con = c;
+
+	return cli;
+}
+
+
+void end_session(ClientSession session){
+	destroy_connection(session->con);
+	free(session);
 }
 
 
