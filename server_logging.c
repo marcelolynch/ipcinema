@@ -11,7 +11,6 @@
 
 void set_log()
 {
-   /* create the FIFO (named pipe) */
     mkfifo(FIFO_PATH, 0666);
   
     if(fork() == 0){
