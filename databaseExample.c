@@ -1,5 +1,7 @@
-#include <sqlite3.h>
+#include "sqlite3.h"
 #include <stdio.h>
+#include "database.h"
+int callback(void *NotUsed, int argc, char **argv, char **azColName);
 
 int main(void) {
     
@@ -7,7 +9,7 @@ int main(void) {
     char *err_msg = 0;
     
     /* Open the file with the database and make reference to the one passed as second parameter. Returns the result of the operation. */
-    int rc = sqlite3_open("/home/favarela/database.db" , &database);
+    int rc = sqlite3_open("database.db" , &database);
     
     if (rc != SQLITE_OK) {        
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(database));
@@ -17,17 +19,10 @@ int main(void) {
     
     /* SQL String that will be executed next.*/
     
-    char* sql = 
-    "CREATE TABLE Cinema(Nro INTEGER PRIMARY KEY, Asientos INTEGER, Asientos_Disp INTEGER, Asientos_Ocup INTEGER,Detalles TEXT);"
-    "INSERT INTO Cinema VALUES (1,50,10,0,'3D');"
-    "INSERT INTO Cinema VALUES (2,25,25,0,'2D');"
-    "INSERT INTO Cinema VALUES (3,40,40,0,'2D');"
-    "INSERT INTO Cinema VALUES (4,30,30,0,'2D');"
-    "INSERT INTO Cinema VALUES (5,100,100,0,'IMAX');";
-    
+ 
     /*The sqlite3_exec() function is a convenience wrapper that allows an application to run multiple statements of SQL without having to use a lot of C code.*/
     
-    rc = sqlite3_exec(datab, sql, 0, 0, &err_msg);
+    rc = sqlite3_exec(database, TABLESCREATE, 0, 0, &err_msg);
     
     if (rc != SQLITE_OK ) {
         
@@ -40,9 +35,29 @@ int main(void) {
         fprintf(stdout, "Table Cinema created successfully!\n");
     }
 
-char *sql_2 = "SELECT * FROM Cinema";
+char* query = "INSERT INTO Pelicula(nombre, descripcion) VALUES ('Matrix', 'La pelicula matrix' );"
+              "INSERT INTO Pelicula(nombre, descripcion) VALUES ('Matrix Recargado', 'La pelicula matrix' );"
+              "INSERT INTO Pelicula(nombre, descripcion) VALUES ('Matrix Revoluciones', 'La pelicula matrix' );"
+              "INSERT INTO Proyeccion(nombrePelicula, dia, slot) VALUES ('Matrix', 2, 3);"
+              "INSERT INTO Proyeccion(nombrePelicula, dia, slot) VALUES ('Matrix Recargado', 2, 3);";
+
+rc = sqlite3_exec(database, query, 0, 0, &err_msg);
+    
+    if (rc != SQLITE_OK ) {
         
-    rc = sqlite3_exec(db, sql_2, callback, 0, &err_msg);
+        fprintf(stderr, "Failed to create table\n");
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+        sqlite3_free(err_msg);
+        
+    } else {
+        
+        fprintf(stdout, "Inserted movies\n");
+    }
+
+
+char *sql_2 = "SELECT * FROM Proyeccion";
+        
+    rc = sqlite3_exec(database, sql_2, callback, 0, &err_msg);
     
     if (rc != SQLITE_OK ) {
         
