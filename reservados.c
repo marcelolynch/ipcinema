@@ -2,6 +2,8 @@
 
 #include "sqlite3.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include "queries.h"
 #include "database.h"
 #include "callback.h"
 
@@ -56,7 +58,10 @@ int main(void) {
         fprintf(stdout, "Inserted client.\n");
     }
 
-    rc = sqlite3_exec_printf(database, RESERVE, 0, 0, &err_msg,"0,\'Matrix',0,4,\'Reservado\'");
+    char *query3 = "0,\'Matrix',0,4,\'Reservado\'";
+    char *query4 = sqlite3_mprintf ( RESERVE, query3);
+    rc = sqlite3_exec (database, query4,0, 0, &err_msg);
+    sqlite3_free (query4);
 
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "Failed to reserve the seat.\n");
@@ -67,7 +72,7 @@ int main(void) {
     }
 
     struct Datos tupla;
-
+    tupla.data = (char*) malloc (1000);
     rc = sqlite3_exec(database, RESERVED, callback, &tupla, &err_msg);
 
     if (rc != SQLITE_OK ) {
@@ -75,10 +80,10 @@ int main(void) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
     } else {
-        fprintf(stdout, "Reserved Seats: %d\n",tupla.filas);
+        fprintf(stdout, "Reserved Seats: %d\n",tupla.rows);
         fprintf(stdout, "Client Id - Movie - Projection Id - Seat");
-        for (int i = 0 ; i < tupla.filas ; i++){
-          for (int j= 0 ; j < 4){
+        for (int i = 0 ; i < tupla.rows ; i++){
+          for (int j = 0 ; j < 4 ; j++){
             fprintf(stdout,deconcat(tupla.data));
           }
         }
