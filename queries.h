@@ -1,36 +1,31 @@
 /*Listado de Peliculas*/
-SELECT nombre
-FROM Pelicula
+#define MOVIES "SELECT nombre\
+FROM Pelicula"
 
 /*Descripcion de Pelicula*/
-SELECT descripcion
-FROM Pelicula
-WHERE nombre= ...
+#define DESCRIPTIONS "SELECT descripcion\
+FROM Pelicula\
+WHERE %S"
 
 /*Agregar Pelicula al listado*/
-INSERT INTO Peliculas(nombre, descripcion)
-values ...
+#define ADDMOVIE "INSERT INTO Peliculas(nombre, descripcion)\
+values %S"
 
 /*Asientos reservados*/
-SELECT cliente, nombrePelicula, dia, slot, asiento
-FROM Reservas
-WHERE estado="Reservado"
+#define RESERVED "SELECT cliente, nombrePelicula, dia, slot, asiento\
+FROM Reservas\
+WHERE estado=\"Reservado\""
 
 /*Reservas canceladas*/
-SELECT cliente, nombrePelicula, dia, slot, asiento
-FROM Reservas
-WHERE estado="Cancelado"
-
-/*Reservas canceladas*/
-SELECT cliente, nombrePelicula, dia, slot, asiento
-FROM Reservas
-WHERE estado="Cancelado"
+#define CANCELED "SELECT cliente, nombrePelicula, dia, slot, asiento\
+FROM Reservas\
+WHERE estado=\"Cancelado\""
 
 /*Cancelar Reserva*/
-UPDATE Reservas
-SET estado="Cancelado"
-WHERE nombrePelicula= ... , dia= ... , slot= ... ,asiento= ...
+#define CANCEL "UPDATE Reservas\
+SET estado=\"Cancelado\"\
+WHERE %S"
 
 /*Realizar Reserva*/
-INSERT INTO Reservas(clienteId,nombrePelicula,dia,slot,asiento)
-VALUES ...
+#define RESERVE "INSERT INTO Reservas(clienteId,nombrePelicula,dia,slot,asiento)\
+VALUES %S"
