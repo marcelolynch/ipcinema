@@ -75,9 +75,9 @@ int main(void) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
     } else {
-        fprintf(stdout, "Reserved Seats: %d\n",tupla.rows);
+        fprintf(stdout, "Reserved Seats: %d\n",tupla.filas);
         fprintf(stdout, "Client Id - Movie - Projection Id - Seat");
-        for (int i = 0 ; i < tupla.rows ; i++){
+        for (int i = 0 ; i < tupla.filas ; i++){
           for (int j= 0 ; j < 4){
             fprintf(stdout,deconcat(tupla.data));
           }
