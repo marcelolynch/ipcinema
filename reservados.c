@@ -30,11 +30,11 @@ int main(void) {
         fprintf(stdout, "Database Cinema created successfully!\n");
     }
 
-    char* query = "INSERT INTO Pelicula(nombre, descripcion) VALUES ('Matrix', 'La pelicula matrix' );"
-                  "INSERT INTO Pelicula(nombre, descripcion) VALUES ('Matrix Recargado', 'La pelicula matrix' );"
-                  "INSERT INTO Pelicula(nombre, descripcion) VALUES ('Matrix Revoluciones', 'La pelicula matrix' );"
-                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot) VALUES ('Matrix', 2, 3);"
-                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot) VALUES ('Matrix Recargado', 2, 3);";
+    char* query = "INSERT INTO Pelicula VALUES ('Matrix', 'Matrix la pelicula' );"
+                  "INSERT INTO Pelicula VALUES ('Harry Potter', 'La piedra filosofal' );"
+                  "INSERT INTO Pelicula VALUES ('El senor de los Anillos', 'La primera' );"
+                  "INSERT INTO Proyeccion VALUES ('Matrix', 2, 3);"
+                  "INSERT INTO Proyeccion VALUES ('Harry Potter', 2, 3);";
 
     rc = sqlite3_exec(database, query, 0, 0, &err_msg);
 
@@ -46,7 +46,7 @@ int main(void) {
         fprintf(stdout, "Inserted movies\n");
     }
 
-    char *query2= "INSERT INTO Cliente(0,30000000,\'Pepe\',\'Gomez\',\'Calle Falsa 1234\',\'4700-1122\');";
+    char *query2= "INSERT INTO Cliente VALUES (0,300,'Pepe','Gomez','Calle Falsa 1234','4700-1122');";
 
     rc = sqlite3_exec(database, query2, 0, 0, &err_msg);
 
@@ -58,7 +58,7 @@ int main(void) {
         fprintf(stdout, "Inserted client.\n");
     }
 
-    char *query3 = "0,\'Matrix',0,4,\'Reservado\'";
+    char *query3 = "(0,'Matrix',0,4,'Reservado');";
     char *query4 = sqlite3_mprintf ( RESERVE, query3);
     rc = sqlite3_exec (database, query4,0, 0, &err_msg);
     sqlite3_free (query4);
@@ -84,7 +84,7 @@ int main(void) {
         fprintf(stdout, "Client Id - Movie - Projection Id - Seat");
         for (int i = 0 ; i < tupla.rows ; i++){
           for (int j = 0 ; j < 4 ; j++){
-            fprintf(stdout,deconcat(tupla.data));
+            fprintf(stdout,"%s",deconcat(tupla.data));
           }
         }
     }
