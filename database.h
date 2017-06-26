@@ -9,7 +9,8 @@ id INTEGER PRIMARY KEY AUTOINCREMENT,\
 nombrePelicula 	TEXT,\
 dia 	INT CHECK(dia BETWEEN 1 AND 7),\
 slot 	INT CHECK(slot BETWEEN 1 AND 8),\
-UNIQUE(dia,slot),\
+sala	INTEGER CHECK(sala BETWEEN 1 and 10),
+UNIQUE(dia,slot, sala),\
 FOREIGN KEY(nombrePelicula) REFERENCES Pelicula ON DELETE CASCADE ON UPDATE RESTRICT\
 );\
 \
