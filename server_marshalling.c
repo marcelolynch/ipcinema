@@ -3,6 +3,7 @@
 #include "errors.h"
 #include "server_marshalling.h"
 #include "server_logging.h"
+#include "protocol.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -73,35 +74,51 @@ void client_send(ClientSession client, char* msg){
 
 
 ClientRequest * wait_request(ClientSession cli){
-	char buf[BUF_SIZE] = {0};
+	char buf[PACKET_LENGTH] = {0};
 
-	if(!receive_message(cli->con, buf)){
+	int rd = receive_message(cli->con, buf);
+	if(!rd){
 		fatal("Error in receive");
 	}
 
+	char str[100];
+	sprintf(str, "Received request: %d bytes", rd);
 
-	srv_log("Received request");
+	srv_log(str);
 	ClientRequest * req = malloc(sizeof(*req));
+	
 
-	if(strncmp(buf, "reserve", strlen("reserve")) == 0){
-		req->type = RESERVATION;
-		req->data = malloc(sizeof(*req->data));
-		ReservationRequest r = req->data;
-		int code = atoi(buf+strlen("reserve")+1);
-		r->auditorium = code/100;
-		r->seat = code%100;
+	switch(buf[0]){
+		case MOVIE_ADD:
+		{
+			char* name = buf+1;
+			char* desc = buf+1+strlen(name)+1;
+			srv_log("Movie add request");
+			req->type = MOVIE_ADD;
+			break;
+		}
+		case MOVIE_DELETE:
+		{
+			srv_log("Movie delete request");
+			break;
+		}
 
-	} else if(strncmp(buf, "info", strlen("info")) == 0){
+		case SCREENING_ADD:
+		{
+			srv_log("Screening add request");
+			printf("PRING\n\n\n\n\n\n\n\n");
+			break;
+		}
 
-		req->type = SEAT_INFO;
-		req->data = malloc(sizeof(*req->data));
+		case SCREENING_DELETE:
+		{
+			srv_log("Screening delete request");
+			break;
+		}
 
-		AuditoriumInfo r = req->data;
-		int code = atoi(buf+strlen("info")+1);
-		r->auditorium = code;
-	} else{
-		free(req);
-		return NULL;
+		default:
+			srv_log("Unknown request");
+			break;
 	}
 
 	return req;

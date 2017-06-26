@@ -1,15 +1,13 @@
 #ifndef __proto_h
 #define __proto_h
 
-#define SHORT_PACKET_LENGTH 128
-#define LONG_PACKET_LENGTH 1024
 
 
-#define QUERY 0
-#define RESERVATION 1
-#define CANCEL_RESERVATION 2
-
-
-
+#define MOVIE_ADD 			0
+#define MOVIE_DELETE 		1
+#define SCREENING_ADD 		2
+#define SCREENING_DELETE	3
+#define SCREENING_INFO 		4
+#define MOVIE_INFO 			5
 
 #endif

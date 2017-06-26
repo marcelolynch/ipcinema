@@ -78,29 +78,21 @@ static void * thread_work(void* data){
 
     ThreadInfo* info = (ThreadInfo*)data;
     ClientSession session = info->session;
-
+    int i = 0; 
+    char str[10];
+    while(i++ < 50){
+        sprintf(str, "%d\n", i);
+        srv_log(str);
+    }
     while(1){
         
         ClientRequest * req = wait_request(info->session);
         if(req == NULL){
             client_send(session, "Not valid dude\n");
             continue;
-        } 
-
-        switch(req->type){
-            case RESERVATION:
-            {
-                ReservationRequest res = (ReservationRequest)req->data;
-                reservation(session, res);
-                break;
-            }
-            case SEAT_INFO:
-                break;
+        } else {
+          client_send(session, "OK\n");  
         }
-
-
-
-
     }
      
      return 0; 

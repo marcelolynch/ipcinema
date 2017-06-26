@@ -27,19 +27,27 @@ int main(int argc, char*argv[]){
 	while(1){
 		memset(buf, 0, 1024); 
 		
+
+		MovieInfo movie;
+		ScreeningInfo screening;
+
 		scanf("%s", buf);
-		int a = client_send(cli, buf);
-		if(a < 0){
-			printf("Error: broken pipe");
-		} else{
-			printf("Ret: %d", a);
-		}
+		while(getchar() != '\n');
+
+		strcpy(movie.name, buf);
+		strcpy(movie.description, "Generic description");
+		
+		add_movie(cli, &movie);
+		delete_movie(cli, movie.name);
+
+
+		strcpy(screening.movie, movie.name);
+		screening.slot = 1;
+		screening.day = 5;
+		
+		add_screening(cli, &screening);
 
 		memset(buf, 0, 1024); 
-		if(client_rcv(cli, buf) <= 0){
-			printf("Server closed connection");
-		}
-		printf("%s", buf);
 	}
 
 }

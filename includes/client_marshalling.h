@@ -1,6 +1,29 @@
 typedef struct clientInstanceCDT* ClientInstance; 
 
+#define MOVIE_NAME_LEN 127
+#define DESCRIPTION_LEN 255
+
+
+typedef struct movieinfo{
+	char name[MOVIE_NAME_LEN + 1];
+	char description[DESCRIPTION_LEN + 1];
+} MovieInfo;
+
+typedef struct screeninginfo{
+	char movie[MOVIE_NAME_LEN + 1];
+	int day;
+	int slot;
+} ScreeningInfo;
+
 ClientInstance new_client(char* srv, int portno);
 
-int client_send(ClientInstance instance, char * msg);
 int client_rcv(ClientInstance instance, char* buf);
+
+
+void add_movie(ClientInstance instance, MovieInfo* movie);
+
+void delete_movie(ClientInstance instance, char* movie_name);
+
+void add_screening(ClientInstance instance, ScreeningInfo* screening);
+
+void delete_screening(ClientInstance instance, ScreeningInfo* screening);

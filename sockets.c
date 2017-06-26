@@ -107,11 +107,11 @@ Connection connect_to_socket(Address addr){
 
 
 int receive_message(Connection con, char* buf){
-	return read(con->fd, buf, BUF_SIZE); /* read from socket */
+	return read(con->fd, buf, PACKET_LENGTH); /* read from socket */
 }
 
 int send_message(Connection con, char* buf){
-	return send(con->fd, buf, strlen(buf), MSG_NOSIGNAL);
+	return send(con->fd, buf, PACKET_LENGTH, MSG_NOSIGNAL);
 }
 
 

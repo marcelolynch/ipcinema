@@ -22,7 +22,7 @@ server: $(SERVER_SOURCES) $(COMMON_SOURCES)
 	$(CC) -pthread $(CFLAGS) $(COMMON_SOURCES) $(SERVER_SOURCES) -o $(SERVER_BINARY)
 
 log: $(LOG_SOURCES)
-	$(CC) $(CFLAGS) $(LOG_SOURCES) -o $(LOG_BINARY) 
+	$(CC) $(CFLAGS) $(LOG_SOURCES) -pthread -o $(LOG_BINARY) 
 
 
 .PHONY: clean
