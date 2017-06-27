@@ -33,7 +33,10 @@ int main(){
 	return 0;
 }
 
-
+void clearBuffer(){
+	char c;
+	while ((c = getchar()) != '\n' && c != EOF);
+}
 
 int getClientType(){
 	while(1){
@@ -66,10 +69,11 @@ int showDays(){
 		printf("Select a day for seeing movies of that day: ");
 		int ans;
 		if(scanf("%d",&ans)>0 && ans>0 && ans<=7){
+			clearBuffer();
 			return ans;
 		}
 		printf("Not a valid option\n\n");
-		while (getchar() != '\n');
+		clearBuffer();
 	}
 }
 
@@ -84,10 +88,11 @@ int showMovies(char movies [][128], int length){
 		printf("\nInsert number of the movie you want to see: ");
 		int ans;
 		if(scanf("%d",&ans)>0 && ans>0 && ans<=length){
+			clearBuffer();
 			return ans-1;
 		}
 		printf("Not a valid option\n\n");
-		while (getchar() != '\n');
+		clearBuffer();
 	}
 
 }
@@ -116,6 +121,7 @@ int showSeats(int seats[HALL_ROWS][HALL_COLS], int * row, int * col){
 				*col-=1;
 				*row-=1;
 		if(seats[*row][*col]==0){
+			clearBuffer();
 			return 1;
 		}else{
 			printf("Seat is already taken\n");
@@ -125,7 +131,7 @@ int showSeats(int seats[HALL_ROWS][HALL_COLS], int * row, int * col){
 	}
 
 	
-	while (getchar() != '\n');
+	clearBuffer();
 }
 
 
@@ -151,10 +157,10 @@ int showOptions(){
 int getMovieInfo(char name [], char description []){
 	printf("Insert movie name: ");
 	scanf("%s",name);
-	while (getchar() != '\n');
+	clearBuffer();
 	printf("Insert movie description: ");
 	scanf("%s",description);
-	while (getchar() != '\n');
+	clearBuffer();
 	printf("\n");
 	return 0;
 }
@@ -163,7 +169,7 @@ int askExit(){
 	while(1){
 		printf("Do you want to make another reservation? (y/n): ");
 		char ans=getchar();
-		while (getchar() != '\n');
+		clearBuffer();
 		if(ans=='n'){
 			return 1;
 		}else if(ans=='y'){
@@ -206,8 +212,5 @@ int startAdministrator(){
 	}
 }
 }
-
-
-
 
 
