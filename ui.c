@@ -11,6 +11,7 @@
 #define DEL_SCREENING 4
 #define MOVIE_NAME_LEN 127
 #define DESCRIPTION_LEN 255
+#define MAX_SLOTS 10
 
 int main(){
 	
@@ -117,7 +118,7 @@ int showSeats(int seats[HALL_ROWS][HALL_COLS], int * row, int * col){
 		printf("\n");
 	}
 	printf("\nInsert a row and column for reserving: ");
-	if(scanf("%d %d",row,col)==2 && *row>=0 && *row<HALL_ROWS && *col>=0 && *col<HALL_COLS){
+	if(scanf("%d %d",row,col)==2 && *row>0 && *row<=HALL_ROWS && *col>0 && *col<=HALL_COLS){
 				*col-=1;
 				*row-=1;
 		if(seats[*row][*col]==0){
@@ -154,26 +155,41 @@ int showOptions(){
 	}
 }
 
-int getMovieInfo(char name [], char description []){
+int getMovieName(char name []){
 	printf("Insert movie name: ");
 	scanf("%s",name);
 	clearBuffer();
+}
+
+int getMovieInfo(char name [], char description []){
+	getMovieName(name);
 	printf("Insert movie description: ");
 	scanf("%s",description);
 	clearBuffer();
 	printf("\n");
 	return 0;
 }
-
-int askExit(){
+int getSlot(){
 	while(1){
-		printf("Do you want to make another reservation? (y/n): ");
+	printf("Insert a slot (1-%d): ",MAX_SLOTS);
+	int ans;
+		if(scanf("%d",&ans)>0 && ans>0 && ans<=MAX_SLOTS){
+			clearBuffer();
+			return ans-1;
+		}
+		printf("Not a valid option\n\n");
+		clearBuffer();
+	}
+}
+int askYN(char question []){
+	while(1){
+		printf("%s",question);
 		char ans=getchar();
 		clearBuffer();
 		if(ans=='n'){
-			return 1;
-		}else if(ans=='y'){
 			return 0;
+		}else if(ans=='y'){
+			return 1;
 		}
 		printf("Invalid command\n");
 	}
@@ -184,12 +200,19 @@ int startClient(){
 	char movies [MOVIES][128]={"Harry Potter 1","Harry Potter 2","Harry Potter 3","Harry Potter 4","Harry Potter 5","Harry Potter 6","Harry Potter 7: Parte 1","Harry Potter 7: Parte 2","Animales Fantasitcos y Donde Encontrarlos","Animales Fantasitcos y Donde Encontrarlos 2"};
 	
 	while(1){
-		showDays();
-		showMovies(movies,MOVIES);
+		// get movies from db
+		int movie =showMovies(movies,MOVIES);
+		
+		// get days for movie
+		int day =showDays();
+		
+		// get hall from db
 		int row,col;
 		showSeats(seats,&row,&col);
 		printf("Trying to reserve row: %d col:%d\n",row,col );
-		if(askExit()){
+
+		//try to resrve 
+		if(!askYN("Do you want to make another reservation? (y/n): ")){
 			return 0;
 		}
 	}
@@ -204,13 +227,22 @@ int startAdministrator(){
 		getMovieInfo(name,description);
 		printf("Adding movie...\n");
 	}else if (option == ADD_SCREENING){
-
+		char name[MOVIE_NAME_LEN];
+		getMovieName(name);
+		int day = showDays();
+		int slot= getSlot();
+		printf("Adding screening ...\n");
 	}else if(option == DEL_MOVIE){
-
+		char name[MOVIE_NAME_LEN];
+		getMovieName(name);
+		printf("Deleting movie ...\n");
 	}else if(option == DEL_SCREENING){
-
+		char name[MOVIE_NAME_LEN];
+		getMovieName(name);
+		int day = showDays();
+		int slot= getSlot();
+		printf("Deleting screening ...\n");
 	}
 }
 }
-
 
