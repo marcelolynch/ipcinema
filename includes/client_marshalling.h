@@ -2,6 +2,8 @@ typedef struct clientInstanceCDT* ClientInstance;
 
 #define MOVIE_NAME_LEN 127
 #define DESCRIPTION_LEN 255
+#define HALL_ROWS 8
+#define HALL_COLS 8
 
 
 typedef struct movieinfo{
@@ -14,6 +16,24 @@ typedef struct screeninginfo{
 	int day;
 	int slot;
 } ScreeningInfo;
+
+typedef struct screenings{
+	ScreeningInfo * list;
+	int length;
+} ScreeningsList;
+
+typedef struct movies{
+	MovieInfo * list;
+	int length;
+} MoviesList;
+
+
+MoviesList getMovies();
+
+ScreeningsList getScreenings(MovieInfo movie);
+
+char * getHall(ScreeningInfo screening);
+
 
 ClientInstance new_client(char* srv, int portno);
 
