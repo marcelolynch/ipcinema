@@ -11,6 +11,8 @@ ClientSession wait_client(ServerInstance srv);
 
 ServerInstance server_init(int port);
 
-void client_send(ClientSession client, char* msg);
+
+void client_send_error(ClientSession cli);
+void client_send_ok(ClientSession cli);
 
 #endif

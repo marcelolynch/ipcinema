@@ -29,7 +29,6 @@ int main(int argc, char*argv[]){
 		
 
 		MovieInfo movie;
-		ScreeningInfo screening;
 
 		scanf("%s", buf);
 		while(getchar() != '\n');
@@ -38,15 +37,6 @@ int main(int argc, char*argv[]){
 		strcpy(movie.description, "Generic description");
 		
 		add_movie(cli, &movie);
-		delete_movie(cli, movie.name);
-
-
-		strcpy(screening.movie, movie.name);
-		screening.slot = 1;
-		screening.day = 5;
-		
-		add_screening(cli, &screening);
-
 		memset(buf, 0, 1024); 
 	}
 

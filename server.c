@@ -1,5 +1,6 @@
 #include "errors.h"
 #include "db.h"
+#include "queries.h"
 #include "server.h"
 #include "server_logging.h"
 #include "server_marshalling.h"
@@ -20,6 +21,8 @@
 #define SERVER_PORT 12345 
 
 static void * thread_work(void* data);
+static void process_request(ClientRequest* req);
+static void add_movie(MovieInfo* info);
 
 int new_thread(ClientSession client);
 
@@ -87,41 +90,57 @@ static void * thread_work(void* data){
     ThreadInfo* info = (ThreadInfo*)data;
     ClientSession session = info->session;
 
-
-    char* insertions = "INSERT INTO Pelicula VALUES ('Matrix', 'Matrix la pelicula' );"
-                  "INSERT INTO Pelicula VALUES ('Harry Potter', 'La piedra filosofal' );"
-                  "INSERT INTO Pelicula VALUES ('El senor de los Anillos', 'La primera' );"
-                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('Matrix', 2, 3, 4);"
-                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('Harry Potter', 2, 4, 4);";
-
-
-    execute_statements(database, insertions);
-
-    QueryData q = new_query("SELECT * FROM pelicula", 2);
-
-    do_query(database, q);
-    char** row;
-
-    while((row = next_row(q)) != NULL){
-        printf("\n");
-        for (int j = 0 ; j < n_cols(q) ; j++){
-            printf("%s  ", row[j] ? row[j] : "NULL");
-        }
-
-    }
-    fflush(stdout);
-
     while(1){
         
         ClientRequest * req = wait_request(info->session);
         if(req == NULL){
-            client_send(session, "Not valid dude\n");
+            client_send_error(session);
             continue;
         } else {
-          client_send(session, "OK\n");  
+          process_request(req);
+          client_send_ok(session);  
+
         }
     }
      
      return 0; 
 
+}
+
+
+
+static void process_request(ClientRequest* req){
+    switch(req->type){
+    case REQ_MOVIE_ADD:
+        {
+            srv_log("Will add movie");
+            add_movie((MovieInfo*)req->data);
+        }
+        case REQ_MOVIE_DELETE:
+        {
+        }
+
+        case REQ_SCREENING_ADD:
+        {
+        }
+
+        case REQ_SCREENING_DELETE:
+        {
+        }
+
+        default:
+            break;
+    }
+}
+
+
+static void add_movie(MovieInfo* info){
+    char * stmnt = malloc(QUERY_LEN_OVERHEAD + strlen(info->name) + strlen(info->description));
+    sprintf(stmnt, ADD_MOVIE, info->name, info->description);
+    printf("Query: %s\n", stmnt);
+    if(execute_statements(database, stmnt) < 0){
+        srv_log("Error");
+    } else {
+        srv_log("Success");
+    }
 }

@@ -141,6 +141,7 @@ int execute_statements(DbSession session, char* statements){
 	int rc = sqlite3_exec(session->db, statements, NULL, NULL, &session->err_msg);
 
     if (rc != SQLITE_OK ) {
+      srv_log(session->err_msg);
 		return -1;    	
     }
 

@@ -22,11 +22,12 @@ void set_log()
 
 
 void srv_log(char * msg){
-//	printf("%s\n", msg);
-   int fd = open(FIFO_PATH, O_WRONLY);
+	printf("%s\n", msg);
+	fflush(stdout);
+   /*int fd = open(FIFO_PATH, O_WRONLY);
     write(fd, msg, strlen(msg)+1);
     close(fd);
-
+*/
 }
 
 

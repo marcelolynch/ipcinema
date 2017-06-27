@@ -7,7 +7,7 @@
 #include <stdio.h>
 
 static int client_send(ClientInstance instance, char * msg);
-int client_rcv(ClientInstance instance, char* buf);
+static int client_rcv(ClientInstance instance, char* buffer);
 
 struct clientInstanceCDT{
 	Connection connection;
@@ -31,6 +31,20 @@ static void clear_buffer(){
 	memset(buf, 0, PACKET_LENGTH);
 }
 
+
+static void wait_ack(ClientInstance instance){
+	client_rcv(instance, buf);
+	if(buf[0] == ERROR){
+		printf("Error\n");
+	} else if(buf[0] == OK){
+		printf("Ok\n");
+	} else {
+		printf("Unknown reply\n");
+	}
+
+	fflush(stdout);
+}
+
 void add_movie(ClientInstance instance, MovieInfo* movie){
 	clear_buffer();
 	buf[0] = MOVIE_ADD;
@@ -39,9 +53,7 @@ void add_movie(ClientInstance instance, MovieInfo* movie){
 	strcpy(buf+1+len+1, movie->description);
 
 	client_send(instance, buf);
-	client_rcv(instance, buf);
-	printf("Add movie %s", buf);
-
+	wait_ack(instance);
 }
 
 
@@ -50,9 +62,8 @@ void delete_movie(ClientInstance instance, char* movie_name){
 	buf[0] = MOVIE_DELETE;
 	strcpy(buf+1, movie_name);
 	client_send(instance, buf);
+	wait_ack(instance);
 
-	client_rcv(instance, buf);
-	printf("Delete movie %s", buf);
 }
 
 
@@ -64,7 +75,7 @@ void add_screening(ClientInstance instance, ScreeningInfo* screening){
 	strcpy(buf+3, screening->movie);
 
 	client_send(instance,buf);
-	client_rcv(instance, buf);
+	wait_ack(instance);
 	printf("Add screening %s", buf);
 
 }
@@ -77,7 +88,7 @@ void delete_screening(ClientInstance instance, ScreeningInfo* screening){
 	buf[2] = screening->slot;
 
 	client_send(instance,buf);
-	client_rcv(instance, buf);
+	wait_ack(instance);
 	printf("Delete screening %s", buf);
 
 }
@@ -92,7 +103,7 @@ MovieInfo request_movie_info(ClientInstance instance, char * movie_name){
 	client_send(instance, buf);
 
 	//Espero respuesta
-	client_rcv(instance, buf);
+	wait_ack(instance);
 	printf("Req movie %s", buf);
 	MovieInfo info;
 	return info;	
@@ -104,6 +115,6 @@ static int client_send(ClientInstance instance, char * msg){
 }
 
 
-int client_rcv(ClientInstance instance, char* buf){
-	return receive_message(instance->connection, buf);
+static int client_rcv(ClientInstance instance, char* buffer){
+	return receive_message(instance->connection, buffer);
 }

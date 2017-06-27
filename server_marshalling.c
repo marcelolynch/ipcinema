@@ -24,6 +24,11 @@ typedef struct serverinstanceCDT* ServerInstance;
 typedef struct clientsessionCDT* ClientSession;
 
 
+char buf[PACKET_LENGTH];
+
+static void clear_buffer(){
+	memset(buf, 0, PACKET_LENGTH);
+}
 
 ServerInstance server_init(int port){
 	ServerInstance session = malloc(sizeof(struct serverinstanceCDT));
@@ -67,14 +72,9 @@ void end_session(ClientSession session){
 }
 
 
-void client_send(ClientSession client, char* msg){
-    send_message(client->con, msg);
-
-}
-
 
 ClientRequest * wait_request(ClientSession cli){
-	char buf[PACKET_LENGTH] = {0};
+	clear_buffer();
 
 	int rd = receive_message(cli->con, buf);
 	if(!rd){
@@ -95,7 +95,11 @@ ClientRequest * wait_request(ClientSession cli){
 			char* desc = buf+1+strlen(name)+1;
 			sprintf(str, "Movie add request: %s. Desc: %s", name, desc);
 			srv_log(str);
-			req->type = MOVIE_ADD;
+			req->type = REQ_MOVIE_ADD;
+			req->data = malloc(sizeof(MovieInfo));
+			MovieInfo* moviedata = (MovieInfo*)req->data;
+			strcpy(moviedata->name, name);
+			strcpy(moviedata->description, desc);			
 			break;
 		}
 		case MOVIE_DELETE:
@@ -127,4 +131,17 @@ ClientRequest * wait_request(ClientSession cli){
 
 	return req;
 
+}
+
+
+void client_send_error(ClientSession cli){
+	clear_buffer();
+	buf[0] = ERROR;
+	send_message(cli->con, buf);
+}
+
+void client_send_ok(ClientSession cli){
+	clear_buffer();
+	buf[0] = OK;
+	send_message(cli->con, buf);
 }

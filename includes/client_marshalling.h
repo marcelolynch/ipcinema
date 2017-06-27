@@ -17,9 +17,6 @@ typedef struct screeninginfo{
 
 ClientInstance new_client(char* srv, int portno);
 
-int client_rcv(ClientInstance instance, char* buf);
-
-
 void add_movie(ClientInstance instance, MovieInfo* movie);
 
 void delete_movie(ClientInstance instance, char* movie_name);

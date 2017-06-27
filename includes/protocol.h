@@ -1,7 +1,8 @@
 #ifndef __proto_h
 #define __proto_h
 
-
+#define OK					20
+#define ERROR				30
 
 #define MOVIE_ADD 			0
 #define MOVIE_DELETE 		1

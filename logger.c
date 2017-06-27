@@ -19,6 +19,7 @@ int main(int argc, char* argv[])
 	  fd = open(FIFO_PATH, O_RDWR);
   	  read(fd, buf, MAX_BUF);
    	  printf("[LOG]: %s\n", buf);
+      fflush(stdout);
       close(fd);
     }
 	
