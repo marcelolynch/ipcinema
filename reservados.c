@@ -74,29 +74,26 @@ int main(void) {
         fprintf(stdout, "Inserted reserve.\n");
     }
 
-    struct Datos tupla;
-    tupla.cursor = 0;
-    tupla.rows = 0;
 
-    tupla.data = (char*)malloc(1000);
-    *tupla.data = 0;
+    QueryData qdata = new_query_data(4);
     printf("%s\n", RESERVED);
-    rc = sqlite3_exec(database, RESERVED, callback, &tupla, &err_msg);
+    rc = sqlite3_exec(database, RESERVED, callback, qdata, &err_msg);
 
     if (rc != SQLITE_OK ) {
         fprintf(stderr, "Failed to consult table.\n");
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
     } else {
-        fprintf(stdout, "Reserved Seats: %d\n",tupla.rows);
+        fprintf(stdout, "Reserved Seats: %d\n", qdata->rows);
         fprintf(stdout, "Client Id - Movie - Projection Id - Seat");
-        for (int i = 0 ; i < tupla.rows ; i++){
-         char ** row_values = deconcat(&tupla, 4);
-         printf("\n");
-          for (int j = 0 ; j < 4 ; j++){
-            printf("%s  ", row_values[j]);
-          }
+        char ** row_values;
+        while((row_values = next_row(qdata)) != NULL){
+             printf("\n");
+            for (int j = 0 ; j < 4 ; j++){
+             printf("%s  ", row_values[j] ? row_values[j] : "NULL");
+            }
         }
+        
     }
 
     sqlite3_close(database);
