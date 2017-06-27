@@ -58,7 +58,7 @@ int main(void) {
         fprintf(stdout, "Inserted client.\n");
     }
 
-    char *query3 = "(0,'Matrix',0,4,'Reservado'), (1,'Matrix',NULL,5,'Reservado')";
+    char *query3 = "(0,'Matrix',0,4,'Reservado'), (1,'Matrix',NULL,5,'Reservado'),  (1,'Matrix',NULL,6,'Reservado'),  (1,'Matrix',NULL,7,'Reservado'),  (1,'Matrix',6,8,'Reservado')";
     char *query4 = sqlite3_mprintf (RESERVE, query3);
     
     printf("%s\n", query4);
@@ -84,7 +84,7 @@ int main(void) {
         fprintf(stderr, "SQL error: %s\n", err_msg);
         sqlite3_free(err_msg);
     } else {
-        fprintf(stdout, "Reserved Seats: %d\n", qdata->rows);
+        fprintf(stdout, "Reserved Seats: %d\n", n_rows(qdata));
         fprintf(stdout, "Client Id - Movie - Projection Id - Seat");
         char ** row_values;
         while((row_values = next_row(qdata)) != NULL){

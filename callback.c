@@ -6,6 +6,18 @@
 #define QUERY_SEPARATOR '^'
 #define INITIAL_CAPACITY 10
 
+/* res es un puntero a una instancia de la estructura Datos.*/
+struct querydataCDT {
+              int rows;
+              int cols;
+              int cursor;
+              char* ** data;
+              size_t size;
+              size_t capacity;
+            };
+
+static int increase_capacity(QueryData q);
+
 QueryData new_query_data(int cols){
   QueryData q = malloc(sizeof(*q));
   if(q == NULL){
@@ -18,8 +30,19 @@ QueryData new_query_data(int cols){
   q->capacity = INITIAL_CAPACITY;
 }
 
+//Devuelve la cantidad de columnas 
+int n_cols(QueryData q){
+  return q->cols;
+}
 
-int increase_capacity(QueryData q){
+
+
+//Devuelve la cantidad de filas
+int n_rows(QueryData q){
+  return q->rows;
+}
+
+static int increase_capacity(QueryData q){
   if(q == NULL) return -1;
 
   char* **newdata = realloc(q->data, 2*q->capacity*sizeof(char**));
