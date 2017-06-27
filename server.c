@@ -20,7 +20,6 @@
 #define SERVER_PORT 12345 
 
 static void * thread_work(void* data);
-static void reservation(ClientSession session, ReservationRequest request);
 
 int new_thread(ClientSession client);
 
@@ -97,24 +96,4 @@ static void * thread_work(void* data){
      
      return 0; 
 
-}
-
-
-static void reservation(ClientSession session, ReservationRequest request){
-        int status;
-                
-        sleep(3+rand()%6);  //Testing
-
-        pthread_mutex_lock(&mtx); //Enter critical zone
-        status = reserve_seat(request->auditorium, request->seat);
-        pthread_mutex_unlock(&mtx); //Exit critical zone
-        
-        if(status < 0){
-            srv_log("Seat not reserved\n");
-            client_send(session, "Failure: seat was reserved\n");
-        } else{
-            srv_log("Seat reserved\n");
-            client_send(session,"Success!\n");
-        }
-                
 }

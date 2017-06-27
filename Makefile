@@ -3,7 +3,8 @@ CFLAGS = -Wall -I $(INCLUDE_DIR)
 
 INCLUDE_DIR = ./includes
 COMMON_SOURCES = sockets.c errors.c
-SERVER_SOURCES = server.c server_marshalling.c server_logging.c fake_database.c
+SERVER_SOURCES = server.c server_marshalling.c server_logging.c database.c sqlite3.c
+SERVER_FLAGS = -pthread -ldl
 CLIENT_SOURCES = client.c client_marshalling.c 
 
 LOG_SOURCES = logger.c
@@ -19,7 +20,7 @@ client: $(CLIENT_SOURCES) $(COMMON_SOURCES)
 
 
 server: $(SERVER_SOURCES) $(COMMON_SOURCES)
-	$(CC) -pthread $(CFLAGS) $(COMMON_SOURCES) $(SERVER_SOURCES) -o $(SERVER_BINARY)
+	$(CC) $(CFLAGS) $(COMMON_SOURCES) $(SERVER_SOURCES) $(SERVER_FLAGS) -o $(SERVER_BINARY)
 
 log: $(LOG_SOURCES)
 	$(CC) $(CFLAGS) $(LOG_SOURCES) -pthread -o $(LOG_BINARY) 
