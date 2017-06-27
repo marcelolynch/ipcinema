@@ -1,33 +1,40 @@
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "callback.h"
 
-/*deconcat te devuelve el primer elemento del string concatenado y lo elimina del string*/
+/*Deconcat devuelve un vector de cols elementos con los siguientes cols valores que no se consultaron
+  de la querydata y avanza el cursor */
+char ** deconcat(t_QueryData q, int cols){
+    char ** res = malloc(cols*sizeof(char*));	
 
-
-char *deconcat(char *info){
-    char *res = malloc (10000*sizeof(char*));	
     int i, j;
-    for (i = 0 ; info[i] !='|' && info[i] != '\0' ; i++);
-    strncpy(res, info, i);
-    i++;
-    for (j = 0 ; info[j] != '\0' ; j++ )
-    info[j]= info[j+i];
-    info[j]='\0';
+    
+    for(i = 0 ; i < cols ; i++){
+      int value_length = 0;
+      for (j = q->cursor ; q->data[j] !='|' && q->data[j] != '\0' ; j++, value_length++)
+          /* conteo */;
+        
+      res[i] = malloc(value_length+1);
+      strncpy(res[i], q->data + q->cursor, value_length);
+      
+      res[i][value_length] = '\0';
+
+      q->cursor += value_length + 1;  //Avanzo el cursor hasta el siguiente
+    }
+
     return res;
 }
 
 int callback(void *res, int nrCols, char **colElems, char **colsName){
   int i;
-  struct Datos *result = malloc (10000*sizeof(char*));
-  result= res;
-  result->rows = result->rows++;
+  t_QueryData result = res;
+  
+  result->rows++;
 
-  if (strlen(result->data)==0){
-    strcpy(result->data,colElems[0]);
-  for (i = 0; i < nrCols ; i++)
-    strcat(result->data,"|");
-    strcat(result->data,colElems[i]);
+  for (i = 0; i < nrCols ; i++){
+    strcat(result->data, colElems[i] ? colElems[i] : "NULL");
+    strcat(result->data, "|");
   }
   return 0;
 }

@@ -33,8 +33,8 @@ int main(void) {
     char* query = "INSERT INTO Pelicula VALUES ('Matrix', 'Matrix la pelicula' );"
                   "INSERT INTO Pelicula VALUES ('Harry Potter', 'La piedra filosofal' );"
                   "INSERT INTO Pelicula VALUES ('El senor de los Anillos', 'La primera' );"
-                  "INSERT INTO Proyeccion VALUES ('Matrix', 2, 3);"
-                  "INSERT INTO Proyeccion VALUES ('Harry Potter', 2, 3);";
+                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('Matrix', 2, 3, 4);"
+                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('Harry Potter', 2, 4, 4);";
 
     rc = sqlite3_exec(database, query, 0, 0, &err_msg);
 
@@ -58,9 +58,12 @@ int main(void) {
         fprintf(stdout, "Inserted client.\n");
     }
 
-    char *query3 = "(0,'Matrix',0,4,'Reservado');";
-    char *query4 = sqlite3_mprintf ( RESERVE, query3);
-    rc = sqlite3_exec (database, query4,0, 0, &err_msg);
+    char *query3 = "(0,'Matrix',0,4,'Reservado')";
+    char *query4 = sqlite3_mprintf (RESERVE, query3);
+    
+    printf("%s\n", query4);
+
+    rc = sqlite3_exec (database, query4, 0, 0, &err_msg);
     sqlite3_free (query4);
 
     if (rc != SQLITE_OK ) {
@@ -72,7 +75,12 @@ int main(void) {
     }
 
     struct Datos tupla;
-    tupla.data = (char*) malloc (1000);
+    tupla.cursor = 0;
+    tupla.rows = 0;
+
+    tupla.data = (char*)malloc(1000);
+    *tupla.data = 0;
+    printf("%s\n", RESERVED);
     rc = sqlite3_exec(database, RESERVED, callback, &tupla, &err_msg);
 
     if (rc != SQLITE_OK ) {
@@ -83,8 +91,10 @@ int main(void) {
         fprintf(stdout, "Reserved Seats: %d\n",tupla.rows);
         fprintf(stdout, "Client Id - Movie - Projection Id - Seat");
         for (int i = 0 ; i < tupla.rows ; i++){
+         char ** row_values = deconcat(&tupla, 4);
+         printf("\n");
           for (int j = 0 ; j < 4 ; j++){
-            fprintf(stdout,"%s",deconcat(tupla.data));
+            printf("%s  ", row_values[j]);
           }
         }
     }
