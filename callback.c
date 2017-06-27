@@ -1,30 +1,40 @@
-/* res es un puntero a una instancia de la estructura Datos.*/
-struct Datos {
-              int filas;
-              char * data;
-             }
-struct Datos res;
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "callback.h"
 
-/*deconcat te devuelve el primer elemento del string concatenado y lo elimina del string*/
-string *deconcat(string *info){
-    for (int i= 0 ; info[i] !='|' && info[i] != '\0' ; i++);
-    strncpy(char* res, info, i);
-    i++;
-    for (int j = 0 ; info[j] != '\0' ; j++ )
-    info[j]= info[j+i];
-    info[j]='\0';
+/*Deconcat devuelve un vector de cols elementos con los siguientes cols valores que no se consultaron
+  de la querydata y avanza el cursor */
+char ** deconcat(t_QueryData q, int cols){
+    char ** res = malloc(cols*sizeof(char*));	
+
+    int i, j;
+    
+    for(i = 0 ; i < cols ; i++){
+      int value_length = 0;
+      for (j = q->cursor ; q->data[j] !='|' && q->data[j] != '\0' ; j++, value_length++)
+          /* conteo */;
+        
+      res[i] = malloc(value_length+1);
+      strncpy(res[i], q->data + q->cursor, value_length);
+      
+      res[i][value_length] = '\0';
+
+      q->cursor += value_length + 1;  //Avanzo el cursor hasta el siguiente
+    }
+
     return res;
 }
 
 int callback(void *res, int nrCols, char **colElems, char **colsName){
+  int i;
+  t_QueryData result = res;
+  
+  result->rows++;
 
-  res->rows = res->rows++;
-
-  if (strlen(res->data)==0){
-    strcopy(res->data,colElems[0]);
-  for (int i = 0; i < nrCols ; i++)
-    strcat(res->data,"|");
-    strcat(res->data,colElems[i]);
+  for (i = 0; i < nrCols ; i++){
+    strcat(result->data, colElems[i] ? colElems[i] : "NULL");
+    strcat(result->data, "|");
   }
   return 0;
 }

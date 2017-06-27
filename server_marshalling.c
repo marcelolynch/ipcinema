@@ -84,7 +84,7 @@ ClientRequest * wait_request(ClientSession cli){
 	char str[100];
 	sprintf(str, "Received request: %d bytes", rd);
 
-	srv_log(str);
+	srv_log("Received request");
 	ClientRequest * req = malloc(sizeof(*req));
 	
 
@@ -93,26 +93,30 @@ ClientRequest * wait_request(ClientSession cli){
 		{
 			char* name = buf+1;
 			char* desc = buf+1+strlen(name)+1;
-			srv_log("Movie add request");
+			sprintf(str, "Movie add request: %s. Desc: %s", name, desc);
+			srv_log(str);
 			req->type = MOVIE_ADD;
 			break;
 		}
 		case MOVIE_DELETE:
 		{
-			srv_log("Movie delete request");
+			char* name = buf+1;
+			sprintf(str, "Movie delete request: %s", name);
+			srv_log(str);
 			break;
 		}
 
 		case SCREENING_ADD:
 		{
-			srv_log("Screening add request");
-			printf("PRING\n\n\n\n\n\n\n\n");
+			sprintf(str, "Screening add request for movie %s, day %d, slot %d",buf+3, buf[1], buf[2]);
+			srv_log(str);
 			break;
 		}
 
 		case SCREENING_DELETE:
 		{
-			srv_log("Screening delete request");
+			sprintf(str, "Screening delete request for day %d, slot %d", buf[1], buf[2]);
+			srv_log(str);
 			break;
 		}
 
