@@ -104,13 +104,15 @@ DbSession db_init(){
     rc = sqlite3_exec(session->db, TABLES_CREATE, NULL, NULL, &session->err_msg);
 
     if (rc != SQLITE_OK ) {
-        fprintf(stderr, "Failed to create database tables.\n");
-        fprintf(stderr, "SQL error: %s\n", session->err_msg);
+        
+        printf("[ERRROR] Failed to create database tables.\n");
+        printf("[ERROR] SQL error: %s\n", session->err_msg);
         sqlite3_free(session->err_msg);
         free(session);
         return NULL;
+
     } else {
-        fprintf(stdout, "Database Cinema created successfully!\n");
+        printf("Database Cinema created successfully!\n");
     	return session;
     }
 
@@ -121,7 +123,7 @@ DbSession db_init(){
 // Rellena la QueryData con el resultado de la query
 // QueryData tiene que haber sido inicializada antes y ser
 // consistente con la query
-int query(DbSession session, QueryData qdata){
+int do_query(DbSession session, QueryData qdata){
 	int rc = sqlite3_exec(session->db, qdata->query, callback, qdata, &session->err_msg);
 
     if (rc != SQLITE_OK ) {
@@ -183,7 +185,6 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName){
     }
   }
 
-
   q->rows++;
   return 0;
 }
@@ -219,7 +220,7 @@ QueryData new_query(char* query, int cols){
   if(q == NULL){
       return q;
   }
-  
+
   q->query = malloc(strlen(query) + 1);
   strcpy(q->query, query);
 

@@ -50,7 +50,7 @@ ClientSession wait_client(ServerInstance srv){
 	Connection c = accept_connection(srv->addr);
 	
 	if(c == NULL){
-		srv_log("Error establishing connection with client");
+		srv_log("[ERROR] Error establishing connection with client");
 		return NULL;
 	}
 
@@ -121,7 +121,7 @@ ClientRequest * wait_request(ClientSession cli){
 		}
 
 		default:
-			srv_log("Unknown request");
+			srv_log("[WARNING] Received unknown request. Ignoring...");
 			break;
 	}
 

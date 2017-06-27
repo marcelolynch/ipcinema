@@ -1,5 +1,5 @@
 #include "errors.h"
-#include "fakedb.h"
+#include "db.h"
 #include "server.h"
 #include "server_logging.h"
 #include "server_marshalling.h"
@@ -32,6 +32,8 @@ typedef struct ti{
 
 pthread_mutex_t mtx;
 
+DbSession database;
+
 int main(int argc, char*argv[]){
     srand(time(0));
     if (argc != 2) fatal("Usage: server server-port-number");
@@ -40,6 +42,13 @@ int main(int argc, char*argv[]){
 
     ServerInstance server = server_init(atoi(argv[1]));
    
+    database = db_init();
+
+    if(database == NULL){
+        srv_log("[ERROR] Couldn't open database");
+        exit(1);
+    }
+
     pthread_mutex_init(&mtx, NULL);
 
 	while(1){
@@ -51,11 +60,11 @@ int main(int argc, char*argv[]){
 		  new_thread(cli);
        
         } else {
-            srv_log("Unsucessful connection attempt");
+            srv_log("[WARNING] Unsucessful connection attempt");
         }
 	}
 
-    srv_log("Exiting");
+    srv_log("Exiting...");
     return 1;
 }
 
@@ -77,12 +86,31 @@ static void * thread_work(void* data){
 
     ThreadInfo* info = (ThreadInfo*)data;
     ClientSession session = info->session;
-    int i = 0; 
-    char str[10];
-    while(i++ < 50){
-        sprintf(str, "%d\n", i);
-        srv_log(str);
+
+
+    char* insertions = "INSERT INTO Pelicula VALUES ('Matrix', 'Matrix la pelicula' );"
+                  "INSERT INTO Pelicula VALUES ('Harry Potter', 'La piedra filosofal' );"
+                  "INSERT INTO Pelicula VALUES ('El senor de los Anillos', 'La primera' );"
+                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('Matrix', 2, 3, 4);"
+                  "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('Harry Potter', 2, 4, 4);";
+
+
+    execute_statements(database, insertions);
+
+    QueryData q = new_query("SELECT * FROM pelicula", 2);
+
+    do_query(database, q);
+    char** row;
+
+    while((row = next_row(q)) != NULL){
+        printf("\n");
+        for (int j = 0 ; j < n_cols(q) ; j++){
+            printf("%s  ", row[j] ? row[j] : "NULL");
+        }
+
     }
+    fflush(stdout);
+
     while(1){
         
         ClientRequest * req = wait_request(info->session);
