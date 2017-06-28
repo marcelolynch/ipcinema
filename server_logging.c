@@ -20,7 +20,6 @@ void set_log()
 
 }
 
-
 void srv_log(char * msg){
 	printf("%s\n", msg);
 	fflush(stdout);

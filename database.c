@@ -6,54 +6,55 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "callback.h"
-
-
-#define QUERY_SEPARATOR '^'
-#define INITIAL_CAPACITY 10
-
-#define DATABASE_FILENAME "cine.db"
+#include "server_logging.h"
 
 #define TABLES_CREATE "CREATE TABLE IF NOT EXISTS Pelicula(\
-nombre 	TEXT,\
-descripcion 	TEXT,\
+nombre  TEXT,\
+descripcion   TEXT,\
 PRIMARY KEY(nombre)\
 );\
 CREATE TABLE IF NOT EXISTS Proyeccion\
 (\
 id INTEGER PRIMARY KEY AUTOINCREMENT,\
-nombrePelicula 	TEXT,\
-dia 	INT CHECK(dia BETWEEN 1 AND 7),\
-slot 	INT CHECK(slot BETWEEN 1 AND 8),\
-sala	INTEGER CHECK(sala BETWEEN 1 and 10),\
+nombrePelicula  TEXT,\
+dia   INT CHECK(dia BETWEEN 1 AND 7),\
+slot  INT CHECK(slot BETWEEN 1 AND 8),\
+sala  INTEGER CHECK(sala BETWEEN 1 and 10),\
 UNIQUE(dia,slot, sala),\
-FOREIGN KEY(nombrePelicula) REFERENCES Pelicula ON DELETE CASCADE ON UPDATE RESTRICT\
+FOREIGN KEY(nombrePelicula) REFERENCES Pelicula(nombre) ON DELETE CASCADE ON UPDATE RESTRICT\
 );\
 \
-CREATE TABLE IF NOT EXISTS Reservas\
+CREATE TABLE IF NOT EXISTS Reserva\
 (\
-cliId INTEGER,\
-nombrePelicula TEXT,\
+cliente TEXT,\
 proyeccionID INTEGER,\
 asiento INTEGER,\
 estado  TEXT,\
 PRIMARY KEY(proyeccionID, asiento),\
-FOREIGN KEY(cliId) REFERENCES Cliente ON DELETE CASCADE ON UPDATE RESTRICT,\
-FOREIGN KEY(proyeccionID) REFERENCES Proyeccion ON DELETE SET NULL ON UPDATE RESTRICT,\
-FOREIGN KEY(nombrePelicula) REFERENCES Pelicula ON DELETE CASCADE ON UPDATE RESTRICT\
+FOREIGN KEY(proyeccionID) REFERENCES Proyeccion(id) ON DELETE CASCADE ON UPDATE RESTRICT\
 );\
 \
 CREATE TABLE IF NOT EXISTS Cliente\
 (\
-id 	INT,\
+id  INT,\
 dni INT,\
-nombre 	TEXT,\
-apellido 	TEXT,\
+nombre  TEXT,\
+apellido  TEXT,\
 direccion TEXT,\
 telefono  TEXT,\
 PRIMARY KEY(ID),\
 UNIQUE(dni)\
 );"
 
+// En reservas:
+//cliId INTEGER,
+//FOREIGN KEY(cliId) REFERENCES Cliente ON DELETE CASCADE ON UPDATE RESTRICT,
+
+
+#define QUERY_SEPARATOR '^'
+#define INITIAL_CAPACITY 10
+
+#define DATABASE_FILENAME "cine.db"
 
 struct databasesessionCDT {
 	sqlite3 * db;
@@ -93,7 +94,9 @@ DbSession db_init(){
 	DbSession session = malloc(sizeof(*session));
 
     int rc = sqlite3_open(DATABASE_FILENAME, &session->db);
-
+    
+    sqlite3_exec(session->db, "PRAGMA foreign_keys = ON", NULL, NULL, NULL);
+    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(session->db));
         sqlite3_close(session->db);
@@ -127,9 +130,11 @@ int do_query(DbSession session, QueryData qdata){
 	int rc = sqlite3_exec(session->db, qdata->query, callback, qdata, &session->err_msg);
 
     if (rc != SQLITE_OK ) {
-		return -1;    	
+      srv_log(session->err_msg);
+		  return -1;    	
     }
 
+    srv_log("Succesful query");
     return 1;
 }
 
@@ -142,9 +147,10 @@ int execute_statements(DbSession session, char* statements){
 
     if (rc != SQLITE_OK ) {
       srv_log(session->err_msg);
-		return -1;    	
+		  return -1;    	
     }
-
+  
+    srv_log("Succesful query");
     return 1;
 
 }

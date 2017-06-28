@@ -34,6 +34,7 @@ static void clear_buffer(){
 
 static void wait_ack(ClientInstance instance){
 	client_rcv(instance, buf);
+	printf("Server replies: ");
 	if(buf[0] == ERROR){
 		printf("Error\n");
 	} else if(buf[0] == OK){
@@ -49,8 +50,8 @@ void add_movie(ClientInstance instance, MovieInfo* movie){
 	clear_buffer();
 	buf[0] = MOVIE_ADD;
 	int len = strlen(movie->name);
-	strcpy(buf+1,movie->name);
-	strcpy(buf+1+len+1, movie->description);
+	strcpy(&buf[1],movie->name);
+	strcpy(&buf[1+len+1], movie->description);
 
 	client_send(instance, buf);
 	wait_ack(instance);
@@ -72,11 +73,10 @@ void add_screening(ClientInstance instance, ScreeningInfo* screening){
 	buf[0] = SCREENING_ADD;
 	buf[1] = screening->day;
 	buf[2] = screening->slot;
-	strcpy(buf+3, screening->movie);
+	strcpy(&buf[3], screening->movie);
 
 	client_send(instance,buf);
 	wait_ack(instance);
-	printf("Add screening %s", buf);
 
 }
 
@@ -89,10 +89,21 @@ void delete_screening(ClientInstance instance, ScreeningInfo* screening){
 
 	client_send(instance,buf);
 	wait_ack(instance);
-	printf("Delete screening %s", buf);
 
 }
 
+
+void make_reservation(ClientInstance instance, ReservationInfo* res){
+	clear_buffer();
+	buf[0] = MAKE_RESERVATION;
+	buf[1] = res->seat;
+	strcpy(&buf[2], res->screening_id);
+	strcpy(&buf[2 + strlen(&buf[2]) +1], res->client);
+
+	client_send(instance,buf);
+	wait_ack(instance);
+
+}
 
 
 MovieInfo request_movie_info(ClientInstance instance, char * movie_name){
@@ -104,10 +115,66 @@ MovieInfo request_movie_info(ClientInstance instance, char * movie_name){
 
 	//Espero respuesta
 	wait_ack(instance);
-	printf("Req movie %s", buf);
 	MovieInfo info;
 	return info;	
 }
+
+
+
+ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie){
+	clear_buffer();
+	buf[0] = MOVIE_SCREENINGS;
+	strcpy(&buf[1], movie->name);
+
+	client_send(instance, buf);
+	client_rcv(instance, buf);
+
+	ScreeningsList screenings;
+
+
+	if(!(buf[0] == TRANSACTION_BEGIN)){
+		//Algo pasó
+		printf("Screenings transaction failed: received %d\n", buf[0]);
+		screenings.length = 0;
+		return screenings;
+	}
+
+	screenings.length = buf[1];
+	screenings.list = malloc(buf[1] * sizeof(*screenings.list));
+
+	buf[0] = TRANSACTION_NEXT;
+	
+	client_send(instance, buf);
+	client_rcv(instance, buf);
+
+	int i = 0;
+	while(buf[0] == TRANSACTION_ITEM){
+		if(i >= screenings.length){
+			printf("Error in length");
+			break;
+		}	
+		screenings.list[i].day = buf[1];
+		screenings.list[i].slot = buf[2];
+		screenings.list[i].sala = buf[3];
+		strcpy(screenings.list[i].id, &buf[4]);
+		i++;
+
+		buf[0] = TRANSACTION_NEXT;
+		client_send(instance, buf);
+		client_rcv(instance, buf);
+
+	}
+
+	if(buf[0] != TRANSACTION_END){
+		printf("Something happened in the transaction: received %d\n", buf[0]);
+	}
+
+	wait_ack(instance);
+
+	return screenings;
+}
+
+
 
 
 static int client_send(ClientInstance instance, char * msg){

@@ -1,5 +1,6 @@
 #include "sockets.h"
 #include "errors.h"
+#include "protocol.h"
 
 #include <netdb.h>
 #include <stdio.h>
@@ -24,7 +25,8 @@ struct ConnectionCDT{
 };
 
 
-
+void log_socket(int code, int sending);
+char* opcode_to_str(int code);
 
 Address open_socket(char* hostname, int port){
 
@@ -107,11 +109,47 @@ Connection connect_to_socket(Address addr){
 
 
 int receive_message(Connection con, char* buf){
-	return read(con->fd, buf, PACKET_LENGTH); /* read from socket */
+	int r = read(con->fd, buf, PACKET_LENGTH); /* read from socket */
+	log_socket(buf[0], 0);
+	fflush(stdout);
+	return r;
 }
 
 int send_message(Connection con, char* buf){
+	log_socket(buf[0], 1);
+	fflush(stdout);
 	return send(con->fd, buf, PACKET_LENGTH, MSG_NOSIGNAL);
 }
 
+
+
+void log_socket(int code, int sending){
+    char * msg = sending ? "Sending" : "Received";
+
+    printf("[NETWORK] %s %s\n", msg, opcode_to_str(code));
+}
+
+
+char* opcode_to_str(int code){
+    switch(code){
+        case OK: return "OK";
+        case ERROR: return "ERROR";
+        case TRANSACTION_BEGIN: return "TRANSACTION_BEGIN";
+        case TRANSACTION_END:   return "TRANSACTION_END";
+        case TRANSACTION_NEXT: return "TRANSACTION_NEXT";
+        case TRANSACTION_ITEM: return "TRANSACTION_ITEM";
+
+        case MOVIE_ADD: return "MOVIE_ADD";
+        case MOVIE_DELETE: return "MOVIE_DELETE";
+        case SCREENING_ADD: return "SCREENING_ADD";
+        case SCREENING_DELETE: return "SCREENING_DELETE";
+        case SCREENING_INFO: return "SCREENING_INFO";
+        case MOVIE_INFO: return "MOVIE_INFO";
+        case MAKE_RESERVATION: return "MAKE_RESERVATION";
+        case MOVIE_SCREENINGS: return "MOVIE_SCREENINGS";
+        default: return "";
+    }
+
+    return "";
+}
 

@@ -11,6 +11,7 @@ ClientSession wait_client(ServerInstance srv);
 
 ServerInstance server_init(int port);
 
+int send_screenings(ClientSession session, ScreeningDataList* screenings);
 
 void client_send_error(ClientSession cli);
 void client_send_ok(ClientSession cli);

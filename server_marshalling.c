@@ -91,39 +91,82 @@ ClientRequest * wait_request(ClientSession cli){
 	switch(buf[0]){
 		case MOVIE_ADD:
 		{
-			char* name = buf+1;
-			char* desc = buf+1+strlen(name)+1;
-			sprintf(str, "Movie add request: %s. Desc: %s", name, desc);
-			srv_log(str);
+			char* name = &buf[1];
+			char* desc = &buf[1+strlen(name)+1];
+
 			req->type = REQ_MOVIE_ADD;
 			req->data = malloc(sizeof(MovieInfo));
+			
 			MovieInfo* moviedata = (MovieInfo*)req->data;
 			strcpy(moviedata->name, name);
 			strcpy(moviedata->description, desc);			
+			
 			break;
 		}
 		case MOVIE_DELETE:
 		{
-			char* name = buf+1;
-			sprintf(str, "Movie delete request: %s", name);
+			char* name = &buf[1];
 			srv_log(str);
+			
+			req->type = REQ_MOVIE_DELETE;
+			req->data = malloc(strlen(name) + 1);
+			strcpy((char*)req->data, name);
+			
 			break;
 		}
 
 		case SCREENING_ADD:
 		{
-			sprintf(str, "Screening add request for movie %s, day %d, slot %d",buf+3, buf[1], buf[2]);
-			srv_log(str);
+			req->type = REQ_SCREENING_ADD;
+			req->data = malloc(sizeof(ScreeningInfo));
+			ScreeningInfo* info = (ScreeningInfo*)req->data;
+
+			info->day = buf[1];
+			info->slot = buf[2];
+			strcpy(info->movie, &buf[3]);
+			
 			break;
 		}
 
 		case SCREENING_DELETE:
 		{
-			sprintf(str, "Screening delete request for day %d, slot %d", buf[1], buf[2]);
-			srv_log(str);
+			req->type = REQ_SCREENING_DELETE;
+			req->data = malloc(sizeof(ScreeningInfo));
+			ScreeningInfo* info = (ScreeningInfo*)req->data;
+
+			info->day = buf[1];
+			info->slot = buf[2];
 			break;
 		}
 
+		case MAKE_RESERVATION:
+		{
+			req->type = REQ_MAKE_RESERVATION;
+			req->data = malloc(sizeof(ReservationInfo));
+			ReservationInfo* info = (ReservationInfo*)req->data;
+			info->seat = buf[1];
+
+			info->screening_id = atoi(&buf[2]);
+
+			strcpy(info->client, &buf[2 + strlen(&buf[2]) + 1]);
+			break;
+		}
+
+		case MOVIE_INFO:
+		{
+			req->type = REQ_MOVIE_INFO;
+			req->data = malloc(strlen(&buf[1] + 1));
+			strcpy((char*)req->data, &buf[1]);	
+			break;
+		}
+
+		case MOVIE_SCREENINGS:
+		{	
+			req->type = REQ_MOVIE_SCREENINGS;
+			req->data = malloc(strlen(&buf[1] + 1));
+			strcpy((char*)req->data, &buf[1]);	
+			break;
+		}
 		default:
 			srv_log("[WARNING] Received unknown request. Ignoring...");
 			break;
@@ -133,6 +176,56 @@ ClientRequest * wait_request(ClientSession cli){
 
 }
 
+
+int send_screenings(ClientSession session, ScreeningDataList* screenings){
+	clear_buffer();
+	char count = 0;
+
+	ScreeningDataList* runner = screenings;
+	
+	while(runner != NULL){
+		count++;
+		runner = runner->next;
+	}
+
+	buf[0] = TRANSACTION_BEGIN;
+	buf[1] = count;
+	
+	send_message(session->con, buf);
+	receive_message(session->con, buf);
+	fflush(stdout);
+	while(buf[0] == TRANSACTION_NEXT && screenings != NULL){
+		ScreeningDataList* aux;
+	
+		buf[0] = TRANSACTION_ITEM;
+		buf[1] = screenings->data.day;
+		buf[2] = screenings->data.slot;
+		buf[3] = screenings->data.sala;
+		strcpy(&buf[4], screenings->data.id);
+
+		aux = screenings;
+		screenings = screenings->next;
+		free(aux);
+		send_message(session->con, buf);
+		receive_message(session->con, buf);
+
+	}
+	
+	if(buf[0] == TRANSACTION_NEXT){
+		buf[0] = TRANSACTION_END;
+		send_message(session->con, buf);	
+	} else {
+		//El cliente cerro la conexion, mando acknowledgement
+		srv_log("Weird shit\n");
+		buf[0] = OK;
+
+		send_message(session->con, buf);
+	}
+
+	return 1;
+	
+
+}
 
 void client_send_error(ClientSession cli){
 	clear_buffer();
