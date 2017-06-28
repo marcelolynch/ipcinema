@@ -12,6 +12,10 @@
 #define MOVIE_NAME_LEN 127
 #define DESCRIPTION_LEN 255
 #define MAX_SLOTS 10
+#define RESERVE_MOVIE 1
+#define VIEW_RESERVATIONS 2
+#define CANCEL_RESERVATION 3
+#define EXIT 4
 
 int main(){
 	
@@ -138,13 +142,30 @@ int showSeats(int seats[HALL_ROWS][HALL_COLS], int * row, int * col){
 
 }
 
-int showOptions(){
+int showAdminOptions(){
 	while(1){
 		printf("What would you like to do?\n");
 		printf("1 - Add movie\n");
 		printf("2 - Add screening\n");
 		printf("3 - Delte movie\n");
 		printf("4 - Delte screening\n");
+		printf("Select an option: ");
+		int ans;
+		if(scanf("%d",&ans)>0 && ans>0 && ans<=4){
+			return ans;
+		}
+		printf("Not a valid option\n\n");
+		while (getchar() != '\n');
+	}
+}
+
+int showClientOptions(){
+	while(1){
+		printf("What would you like to do?\n");
+		printf("1 - Reserve a movie\n");
+		printf("2 - View reservations\n");
+		printf("3 - Cancel reservation\n");
+		printf("4 - Exit\n");
 		printf("Select an option: ");
 		int ans;
 		if(scanf("%d",&ans)>0 && ans>0 && ans<=4){
@@ -195,7 +216,7 @@ int askYN(char question []){
 	}
 }
 
-int startClient(){
+int startReservation(){
 	int seats[HALL_ROWS][HALL_COLS]={{0,0,0,0,1,0,1,0}};
 	char movies [MOVIES][128]={"Harry Potter 1","Harry Potter 2","Harry Potter 3","Harry Potter 4","Harry Potter 5","Harry Potter 6","Harry Potter 7: Parte 1","Harry Potter 7: Parte 2","Animales Fantasitcos y Donde Encontrarlos","Animales Fantasitcos y Donde Encontrarlos 2"};
 	
@@ -218,9 +239,58 @@ int startClient(){
 	}
 }
 
+void viewReservations(char reserv[][128], int len){
+	
+	if(len==0){
+		printf("There are no reservations.\n");
+		return ;
+	}
+	printf("This are your reservations:\n");
+	int i;
+	for(i=0; i<len;i++){
+		printf("%d - %s\n",i+1,reserv[i] );
+	}
+
+}
+
+int cancelReseravtion(char reserv[][128], int len){
+	if(len==0){
+		printf("There are no reservations.\n");
+		return 0;
+	}
+	while(1){
+		viewReservations(reserv,len);
+		printf("\nInsert number of reservation you want to cancel: ");
+		int ans;
+		if(scanf("%d",&ans)>0 && ans>0 && ans<=len){
+			clearBuffer();
+			return ans-1;
+		}
+		printf("Not a valid option\n\n");
+		clearBuffer();
+	}
+}
+
+int startClient(){
+	while(1){
+		int option =showClientOptions();
+		if(option == RESERVE_MOVIE){
+			startReservation();
+		}else if(option == VIEW_RESERVATIONS){
+			char reserv [2][128]={"HArry postre","maluma"};
+			viewReservations(reserv,2);
+		}else if (option == CANCEL_RESERVATION){
+			char reserv [2][128]={"HArry postre","maluma"};
+			cancelReseravtion(reserv,2);
+		}else if (option == EXIT){
+			return 0;
+		}
+	}
+}
+
 int startAdministrator(){
 	while(1){
-	int option =showOptions();
+	int option =showAdminOptions();
 	if(option == ADD_MOVIE){
 		char name [MOVIE_NAME_LEN];
 		char description [DESCRIPTION_LEN];
