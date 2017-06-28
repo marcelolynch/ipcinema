@@ -46,11 +46,11 @@ typedef struct reservationinfo{
 } ReservationInfo;
 
 
-MoviesList get_movies();
+MoviesList * get_movies(ClientInstance instance);
 
 ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie);
 
-char * get_hall(ScreeningInfo screening);
+char * get_hall(ClientInstance instance, char* screening_id);
 
 ClientInstance new_client(char* srv, int portno);
 

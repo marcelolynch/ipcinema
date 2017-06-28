@@ -15,8 +15,10 @@
 #define SCREENING_ADD 		2
 #define SCREENING_DELETE	3
 #define SCREENING_INFO 		4
-#define MOVIE_INFO 			5
+#define MOVIE_INFO	 		5
 #define MAKE_RESERVATION	6
 #define MOVIE_SCREENINGS	7
+#define SEATING_INFO		8
+#define MOVIE_LIST			9
 
 #endif

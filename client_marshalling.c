@@ -11,6 +11,7 @@ static int client_rcv(ClientInstance instance, char* buffer);
 
 struct clientInstanceCDT{
 	Connection connection;
+	int error_state;
 };
 
 char buf[PACKET_LENGTH];
@@ -108,7 +109,7 @@ void make_reservation(ClientInstance instance, ReservationInfo* res){
 
 MovieInfo request_movie_info(ClientInstance instance, char * movie_name){
 	clear_buffer();
-	buf[0] = MOVIE_INFO;
+	buf[0] = MOVIE_LIST;
 	strcpy(buf+1, movie_name);
 
 	client_send(instance, buf);
@@ -174,6 +175,96 @@ ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie){
 	return screenings;
 }
 
+
+
+MoviesList* get_movies(ClientInstance instance){
+	clear_buffer();
+	buf[0] = MOVIE_LIST;
+
+	client_send(instance, buf);
+	client_rcv(instance, buf);
+
+	MoviesList* movies = malloc(sizeof(MoviesList));
+
+	if(movies == NULL){
+		return NULL;
+	}
+
+	if(!(buf[0] == TRANSACTION_BEGIN)){
+		//Algo pasó
+		printf("Screenings transaction failed: received %d\n", buf[0]);
+		free(movies);
+		return NULL;
+	}
+
+	movies->length = buf[1];
+	movies->list = malloc( buf[1] * sizeof(*movies->list));
+
+	if(movies->list == NULL){
+		free(movies);
+		return NULL;
+	}
+
+	buf[0] = TRANSACTION_NEXT;
+	
+	client_send(instance, buf);
+	client_rcv(instance, buf);
+
+	int i = 0;
+	while(buf[0] == TRANSACTION_ITEM){
+		if(i >= movies->length){
+			//TODO: Borrar esto, debug
+			printf("Error in length");
+			break;
+		}	
+		strncpy(movies->list[i].name, &buf[1], MOVIE_NAME_LEN);
+		movies->list[i].name[MOVIE_NAME_LEN] = '\0'; //Strncpy no lo garantiza
+
+		int len = strlen(&buf[1]);
+		
+		strncpy(movies->list[i].description, &buf[1 + len + 1], DESCRIPTION_LEN);
+		movies->list[i].name[DESCRIPTION_LEN] = '\0'; //Strncpy no lo garantiza
+
+		i++;
+
+		buf[0] = TRANSACTION_NEXT;
+		client_send(instance, buf);
+		client_rcv(instance, buf);
+
+	}
+
+	if(buf[0] != TRANSACTION_END){
+		printf("Something happened in the transaction: received %d\n", buf[0]);
+	}
+
+	wait_ack(instance);
+
+	return movies;
+}
+
+
+
+char * get_hall(ClientInstance instance, char* screening_id){
+	buf[0] = SEATING_INFO;
+	strcpy(&buf[1], screening_id);
+
+	client_send(instance, buf);
+	client_rcv(instance, buf);
+
+	char * seats = malloc(HALL_ROWS*HALL_COLS);
+	if(buf[0] == OK){
+		int i;
+		for(i = 0; i < HALL_ROWS*HALL_COLS - 1 ; i++){
+			seats[i] = buf[1+i];
+		}
+	} else {
+		//TODO: Error
+		return NULL;
+	}
+
+	wait_ack(instance);
+	return seats;
+}
 
 
 

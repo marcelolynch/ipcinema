@@ -167,6 +167,19 @@ ClientRequest * wait_request(ClientSession cli){
 			strcpy((char*)req->data, &buf[1]);	
 			break;
 		}
+
+		case SEATING_INFO:
+		{
+			req->type = REQ_SEATING_INFO;
+			req->data = malloc(strlen(&buf[1] + 1));
+			strcpy((char*)req->data, &buf[1]);	
+			break;
+		}
+		case MOVIE_LIST:
+		{
+			req->type = REQ_MOVIE_LIST;
+			break;
+		}
 		default:
 			srv_log("[WARNING] Received unknown request. Ignoring...");
 			break;
@@ -223,8 +236,62 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 	}
 
 	return 1;
-	
+}
 
+
+//TODO: codigo repetido
+int send_movies(ClientSession session, MovieInfoList* movies){
+	clear_buffer();
+	char count = 0;
+
+	MovieInfoList* runner = movies;
+	
+	while(runner != NULL){
+		count++;
+		runner = runner->next;
+	}
+
+	buf[0] = TRANSACTION_BEGIN;
+	buf[1] = count;
+		
+	send_message(session->con, buf);
+	receive_message(session->con, buf);
+
+	while(buf[0] == TRANSACTION_NEXT && movies != NULL){
+		MovieInfoList* aux;
+	
+		buf[0] = TRANSACTION_ITEM;
+		strcpy(&buf[1], movies->info.name);
+		strcpy(&buf[1+strlen(&buf[1])+1], movies->info.description);
+
+		aux = movies;
+		movies = movies->next;
+		free(aux);
+
+		send_message(session->con, buf);
+		receive_message(session->con, buf);
+	}
+	
+	if(buf[0] == TRANSACTION_NEXT){
+		buf[0] = TRANSACTION_END;
+		send_message(session->con, buf);	
+	} else {
+		//El cliente cerro la conexion, mando acknowledgement
+		srv_log("Weird shit\n");
+		buf[0] = OK;
+		send_message(session->con, buf);
+	}
+
+	return 1;
+}
+
+
+
+int send_seats(ClientSession session, char* seats){
+	buf[0] = OK;
+	memcpy(&buf[1], seats, 100);
+	send_message(session->con, buf);
+	return 1;
 }
 
 void client_send_error(ClientSession cli){

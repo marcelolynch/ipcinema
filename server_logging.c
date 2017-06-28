@@ -1,4 +1,5 @@
 #include "server_logging.h"
+#include "protocol.h"
 
 #include <string.h>
 #include <fcntl.h>
@@ -9,6 +10,9 @@
 
 #define FIFO_PATH "/tmp/myfifo"
 #define LOG_PROC "logger.bin"
+
+void log_socket(int code, int sending);
+char* opcode_to_str(int code);
 
 void set_log()
 {
@@ -32,4 +36,37 @@ void srv_log(char * msg){
 
 void destroy_log(){
 	unlink(FIFO_PATH);
+}
+
+
+void log_socket(int code, int sending){
+    FILE* f = fopen("socketlog.txt", "a");
+    char * msg = sending ? "Sending" : "Received";
+
+    fprintf(f, "[NETWORK] %s %s\n", msg, opcode_to_str(code));
+    fclose(f);
+}
+
+
+char* opcode_to_str(int code){
+    switch(code){
+        case OK: return "OK";
+        case ERROR: return "ERROR";
+        case TRANSACTION_BEGIN: return "TRANSACTION_BEGIN";
+        case TRANSACTION_END:   return "TRANSACTION_END";
+        case TRANSACTION_NEXT: return "TRANSACTION_NEXT";
+        case TRANSACTION_ITEM: return "TRANSACTION_ITEM";
+
+        case MOVIE_ADD: return "MOVIE_ADD";
+        case MOVIE_DELETE: return "MOVIE_DELETE";
+        case SCREENING_ADD: return "SCREENING_ADD";
+        case SCREENING_DELETE: return "SCREENING_DELETE";
+        case SCREENING_INFO: return "SCREENING_INFO";
+        case MOVIE_INFO: return "MOVIE_INFO";
+        case MAKE_RESERVATION: return "MAKE_RESERVATION";
+        case MOVIE_SCREENINGS: return "MOVIE_SCREENINGS";
+        default: return "";
+    }
+
+    return "";
 }

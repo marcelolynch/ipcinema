@@ -27,7 +27,10 @@ static int delete_movie(char* name);
 static int add_screening(ScreeningInfo* info);
 static int delete_screening(ScreeningInfo* info);
 static int make_reservation(ReservationInfo* info);
+static int send_seating_info(ClientSession session, char* screening_id);
+
 static ScreeningDataList* get_screenings(char* movie);
+static MovieInfoList* get_movies();
 
 int new_thread(ClientSession client);
 
@@ -104,15 +107,13 @@ static void * thread_work(void* data){
         } 
         else {
             if(process_request(session, req) > 0){
-                client_send_ok(session);  
+                client_send_ok(session); 
             }
             else{
                 client_send_error(session);
             }
-
         }
-    }
-     
+     }
      return 0; 
 
 }
@@ -156,6 +157,17 @@ static int process_request(ClientSession session, ClientRequest* req){
         {
             srv_log("[CLIENT REQUEST] Movie screenings");
             return send_screenings(session, get_screenings((char*)req->data));
+        }
+        case REQ_SEATING_INFO:
+        {
+            srv_log("[CLIENT REQUEST] Seating info");
+            return send_seating_info(session, (char*)req->data);
+
+        }
+        case REQ_MOVIE_LIST:
+        {
+            srv_log("[CLIENT REQUEST] Movie list");
+            return send_movies(session, get_movies());
         }
         default:
             return -1;
@@ -226,8 +238,10 @@ static ScreeningDataList* get_screenings(char* movie){
 
     char ** row;
     row = next_row(q);
-    if(row == NULL)
+    if(row == NULL){
+        destroy_query_data(q);
         return NULL;
+    }
 
     ScreeningDataList* list = malloc(sizeof(*list));
     
@@ -236,7 +250,6 @@ static ScreeningDataList* get_screenings(char* movie){
     list->data.slot = atoi(row[2]); 
     list->data.sala = atoi(row[3]); 
  
-
     list->next = NULL;
 
     ScreeningDataList* p = list;
@@ -253,5 +266,68 @@ static ScreeningDataList* get_screenings(char* movie){
         p->next = NULL;
     }
 
+    destroy_query_data(q);
     return list;
 }
+
+
+static MovieInfoList* get_movies(){
+    char * query = malloc(QUERY_LEN_OVERHEAD);
+
+    sprintf(query, "SELECT nombre,descripcion FROM Pelicula");
+
+    QueryData q = new_query(query, 2);
+    do_query(database, q);
+
+    char ** row;
+    row = next_row(q);
+    if(row == NULL){
+        destroy_query_data(q);
+        return NULL;
+    }
+
+    MovieInfoList* list = malloc(sizeof(*list));
+    
+    strcpy(list->info.name, row[0]);
+    strcpy(list->info.description, row[1]); 
+    list->next = NULL;
+
+    MovieInfoList* p = list;
+
+    while((row = next_row(q)) != NULL){
+        p->next = malloc(sizeof(*p));
+        p = p->next;
+      
+        strcpy(p->info.name, row[0]);
+        strcpy(p->info.description, row[1]); 
+        
+        p->next = NULL;
+    }
+    
+    destroy_query_data(q);
+    return list;
+}
+
+
+
+static int send_seating_info(ClientSession session, char* screening_id){
+    char * query = malloc(QUERY_LEN_OVERHEAD);
+
+    sprintf(query, "SELECT asiento FROM reserva WHERE proyeccionID = %s", screening_id);
+    QueryData q = new_query(query, 1);
+    do_query(database, q);
+
+    char* seats = calloc(100,1);
+    char** row;
+    while((row = next_row(q)) != NULL){
+        seats[atoi(row[0])] = 1;
+    }
+
+    send_seats(session, seats);
+    free(query);
+    free(seats);
+    return 1;
+}
+
+
+

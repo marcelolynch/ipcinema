@@ -10,7 +10,8 @@ typedef enum {
 	REQ_MOVIE_INFO,
 	REQ_MOVIE_SCREENINGS,
 	REQ_MAKE_RESERVATION, 
-	REQ_SEAT_INFO,
+	REQ_SEATING_INFO,
+	REQ_MOVIE_LIST
 } requestType;
 
 typedef struct requestCDT {
@@ -28,7 +29,10 @@ typedef struct movieinfo{
 	char description[DESCRIPTION_LEN + 1];
 } MovieInfo;
 
-
+typedef struct movieinfolist{
+	MovieInfo info;
+	struct movieinfolist* next;
+} MovieInfoList;
 
 typedef struct screeninginfo{
 	char movie[MOVIE_NAME_LEN + 1];

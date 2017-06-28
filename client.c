@@ -79,8 +79,22 @@ int main(int argc, char*argv[]){
 				}
 				fflush(stdout);
 				break;
-;
-
+			}
+			case 't':
+			{
+				scanf("%s", name);
+				char* seats = get_hall(cli, name);
+				for(i= 0 ; i < 64 ; i++){
+					if(seats[i]){
+						printf("Ocupado: %d\n", i);
+					}
+				}
+				free(seats);
+			}
+			case 'p':
+			{
+				MoviesList* list= get_movies(cli);
+				for(i = 0 ; i < list->length ; )
 			}
 		}
 	}
