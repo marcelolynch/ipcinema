@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include "client_marshalling.h"
+#include "errors.h"
+#include "string.h"
 
 #define ADMIN 1
 #define CLIENT 2
@@ -17,8 +20,13 @@
 #define CANCEL_RESERVATION 3
 #define EXIT 4
 
-int main(){
-	
+int getClientType();
+int startClient();
+int startAdministrator();
+
+
+
+int start_ui(ClientInstance inst){
 
 	printf("************************************\n");
 	printf("**                                **\n");
@@ -30,7 +38,7 @@ int main(){
 	if(ans== CLIENT){
 		printf("----- Starting client ----- \n");
 		startClient();
-	}else if (ans == ADMIN){
+	} else if (ans == ADMIN){
 		printf("----- Starting Administrator ----- \n");
 		startAdministrator();
 	}

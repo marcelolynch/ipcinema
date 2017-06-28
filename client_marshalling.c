@@ -122,7 +122,7 @@ MovieInfo request_movie_info(ClientInstance instance, char * movie_name){
 
 
 
-ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie){
+ScreeningsList* get_screenings(ClientInstance instance, MovieInfo* movie){
 	clear_buffer();
 	buf[0] = MOVIE_SCREENINGS;
 	strcpy(&buf[1], movie->name);
@@ -130,18 +130,18 @@ ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie){
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	ScreeningsList screenings;
-
+	ScreeningsList* screenings = malloc(sizeof(*screenings));
+	//TODO malloc
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
 		//Algo pasó
 		printf("Screenings transaction failed: received %d\n", buf[0]);
-		screenings.length = 0;
+		screenings->length = 0;
 		return screenings;
 	}
 
-	screenings.length = buf[1];
-	screenings.list = malloc(buf[1] * sizeof(*screenings.list));
+	screenings->length = buf[1];
+	screenings->list = malloc(buf[1] * sizeof(*screenings->list));
 
 	buf[0] = TRANSACTION_NEXT;
 	
@@ -150,14 +150,14 @@ ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie){
 
 	int i = 0;
 	while(buf[0] == TRANSACTION_ITEM){
-		if(i >= screenings.length){
+		if(i >= screenings->length){
 			printf("Error in length");
 			break;
 		}	
-		screenings.list[i].day = buf[1];
-		screenings.list[i].slot = buf[2];
-		screenings.list[i].sala = buf[3];
-		strcpy(screenings.list[i].id, &buf[4]);
+		screenings->list[i].day = buf[1];
+		screenings->list[i].slot = buf[2];
+		screenings->list[i].sala = buf[3];
+		strcpy(screenings->list[i].id, &buf[4]);
 		i++;
 
 		buf[0] = TRANSACTION_NEXT;
@@ -175,7 +175,10 @@ ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie){
 	return screenings;
 }
 
-
+void destroy_screenings(ScreeningsList* screenings){
+	free(screenings->list);
+	free(screenings);
+}
 
 MoviesList* get_movies(ClientInstance instance){
 	clear_buffer();
@@ -243,6 +246,12 @@ MoviesList* get_movies(ClientInstance instance){
 }
 
 
+
+
+void destroy_movies(MoviesList* movies){
+	free(movies->list);
+	free(movies);
+}
 
 char * get_hall(ClientInstance instance, char* screening_id){
 	buf[0] = SEATING_INFO;

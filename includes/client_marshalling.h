@@ -47,8 +47,10 @@ typedef struct reservationinfo{
 
 
 MoviesList * get_movies(ClientInstance instance);
+void destroy_movies(MoviesList* movies);
 
-ScreeningsList get_screenings(ClientInstance instance, MovieInfo* movie);
+ScreeningsList * get_screenings(ClientInstance instance, MovieInfo* movie);
+void destroy_screenings(ScreeningsList* screenings);
 
 char * get_hall(ClientInstance instance, char* screening_id);
 
