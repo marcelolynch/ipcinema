@@ -5,15 +5,13 @@
 
 #define ADMIN 1
 #define CLIENT 2
-#define HALL_ROWS 8
-#define HALL_COLS 8
+
 #define MOVIES 10
 #define ADD_MOVIE 1
 #define ADD_SCREENING 2
 #define DEL_MOVIE 3
 #define DEL_SCREENING 4
-#define MOVIE_NAME_LEN 127
-#define DESCRIPTION_LEN 255
+
 #define MAX_SLOTS 10
 #define RESERVE_MOVIE 1
 #define VIEW_RESERVATIONS 2

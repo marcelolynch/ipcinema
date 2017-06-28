@@ -4,6 +4,7 @@ typedef struct clientInstanceCDT* ClientInstance;
 #define ID_LEN 20
 #define DESCRIPTION_LEN 255
 #define CLIENT_NAME_LEN 63
+
 #define HALL_ROWS 8
 #define HALL_COLS 8
 
