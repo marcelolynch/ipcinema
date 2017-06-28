@@ -26,7 +26,7 @@ int startAdministrator();
 
 
 
-int start_ui(ClientInstance inst){
+int start_ui(ClientInstance instance){
 
 	printf("************************************\n");
 	printf("**                                **\n");
