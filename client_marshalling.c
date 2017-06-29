@@ -279,7 +279,7 @@ char * get_hall(ClientInstance instance, char* screening_id){
 
 static int client_send(ClientInstance instance, char * msg){
 	int i;
-	if((i = send_message(instance->connection, msg)) < 0){
+	if((i = send_message(instance->connection, msg)) <= 0){
 		fprintf(stderr, "Connection error. Can't continue\n");
 		destroy_connection(instance->connection);
 		free(instance);
