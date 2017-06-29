@@ -227,7 +227,7 @@ int getSlot(){
 	int ans;
 		if(scanf("%d",&ans)>0 && ans>0 && ans<=MAX_SLOTS){
 			clearBuffer();
-			return ans-1;
+			return ans;
 		}
 		printf("Not a valid option\n\n");
 		clearBuffer();
@@ -259,6 +259,9 @@ int askYN(char question []){
 		printf("Invalid command\n");
 	}
 }
+
+
+
 int showScreenings(ScreeningsList screenings){
 	if(screenings.length==0){
 		printf("There are no movies showing.\n");
