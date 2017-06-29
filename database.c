@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS Proyeccion\
 id INTEGER PRIMARY KEY AUTOINCREMENT,\
 nombrePelicula  TEXT,\
 dia   INT CHECK(dia BETWEEN 1 AND 7),\
-slot  INT CHECK(slot BETWEEN 1 AND 8),\
-sala  INTEGER CHECK(sala BETWEEN 1 and 10),\
+slot  INT CHECK(slot > 1),\
+sala  INTEGER CHECK(sala > 1),\
 UNIQUE(dia,slot, sala),\
 FOREIGN KEY(nombrePelicula) REFERENCES Pelicula(nombre) ON DELETE CASCADE ON UPDATE RESTRICT\
 );\
@@ -32,18 +32,6 @@ asiento INTEGER,\
 estado  TEXT,\
 PRIMARY KEY(proyeccionID, asiento),\
 FOREIGN KEY(proyeccionID) REFERENCES Proyeccion(id) ON DELETE CASCADE ON UPDATE RESTRICT\
-);\
-\
-CREATE TABLE IF NOT EXISTS Cliente\
-(\
-id  INT,\
-dni INT,\
-nombre  TEXT,\
-apellido  TEXT,\
-direccion TEXT,\
-telefono  TEXT,\
-PRIMARY KEY(ID),\
-UNIQUE(dni)\
 );"
 
 // En reservas:

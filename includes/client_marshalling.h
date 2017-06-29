@@ -46,6 +46,11 @@ typedef struct reservationinfo{
 	char client[CLIENT_NAME_LEN + 1];
 } ReservationInfo;
 
+typedef struct tckt{
+	ScreeningInfo screening;
+	int seat;
+} Ticket;
+
 
 MoviesList * get_movies(ClientInstance instance);
 void destroy_movies(MoviesList* movies);
