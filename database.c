@@ -131,7 +131,7 @@ int do_query(DbSession session, QueryData qdata){
 
     if (rc != SQLITE_OK ) {
       srv_log(session->err_msg);
-		  return -1;    	
+		  return rc;    	
     }
 
     srv_log("Succesful query");
@@ -147,7 +147,12 @@ int execute_statements(DbSession session, char* statements){
 
     if (rc != SQLITE_OK ) {
       srv_log(session->err_msg);
-		  return -1;    	
+		  if(rc == SQLITE_CONSTRAINT){
+        return DB_ERR_CONSTRAINT;
+      } else {
+        return DB_ERR_OTHER;
+      }
+
     }
   
     srv_log("Succesful query");

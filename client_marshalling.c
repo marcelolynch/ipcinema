@@ -278,10 +278,24 @@ char * get_hall(ClientInstance instance, char* screening_id){
 
 
 static int client_send(ClientInstance instance, char * msg){
-	return send_message(instance->connection, msg);
+	int i;
+	if((i = send_message(instance->connection, msg)) < 0){
+		fprintf(stderr, "Connection error. Can't continue\n");
+		destroy_connection(instance->connection);
+		free(instance);
+		exit(1);
+	}
+	return i;
 }
 
 
 static int client_rcv(ClientInstance instance, char* buffer){
-	return receive_message(instance->connection, buffer);
+	int i;
+	if((i = receive_message(instance->connection, buffer)) <= 0){
+		fprintf(stderr, "Connection with server closed. Can't continue\n");
+		destroy_connection(instance->connection);
+		free(instance);
+		exit(1);
+	}
+	return i;
 }

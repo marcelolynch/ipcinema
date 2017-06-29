@@ -5,6 +5,9 @@
 #include "server_logging.h"
 #include "protocol.h"
 
+
+#include <pthread.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,14 +40,16 @@ ServerInstance server_init(int port){
 
 	if(session->addr == NULL){
 		srv_log("Socket opening failed");
+		srv_log("Exiting on error");
 		free(session);
-		return NULL;
+		exit(1);
 	}
 
 	if(socket_bind(session->addr) < 0){
-		srv_log("Socket binding failed");
+		srv_log("[ERROR] Socket bind failed. Can't continue");
+		srv_log("Exiting on error");
 		free(session);
-		return NULL;
+		exit(1);
 	}
 
 	return session;
@@ -78,7 +83,10 @@ ClientRequest * wait_request(ClientSession cli){
 
 	int rd = receive_message(cli->con, buf);
 	if(!rd){
-		fatal("Error in receive");
+		srv_log("Error in receive. Closing connection");
+		destroy_connection(cli->con);
+		free(cli);
+		pthread_exit(NULL);
 	}
 
 	char str[100];
@@ -206,7 +214,7 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 	
 	send_message(session->con, buf);
 	receive_message(session->con, buf);
-	fflush(stdout);
+
 	while(buf[0] == TRANSACTION_NEXT && screenings != NULL){
 		ScreeningDataList* aux;
 	

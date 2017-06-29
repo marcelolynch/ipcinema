@@ -88,6 +88,7 @@ Connection accept_connection(Address addr){
 
 
 void destroy_connection(Connection c){
+	close(c->fd);
 	free(c);
 }
 

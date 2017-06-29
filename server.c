@@ -88,8 +88,13 @@ int new_thread(ClientSession client){
     info->session = client;
     info->number = num++;
     
-    return pthread_create(&thread, NULL, thread_work, info);
-
+    int creation = pthread_create(&thread, NULL, thread_work, info);
+  
+    if(creation == 0){
+        pthread_detach(thread);
+    }
+    
+    return creation;    
 }
 
 
@@ -106,7 +111,8 @@ static void * thread_work(void* data){
             continue;
         } 
         else {
-            if(process_request(session, req) > 0){
+            int r = process_request(session,req);
+            if(r > 0){
                 client_send_ok(session); 
             }
             else{

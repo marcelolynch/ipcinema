@@ -7,6 +7,9 @@ typedef struct querydataCDT * QueryData;
 
 DbSession db_init();
 
+#define DB_ERR_CONSTRAINT -1
+#define DB_ERR_OTHER	  -2
+
 
 int do_query(DbSession session, QueryData qdata);
 int execute_statements(DbSession session, char* statements);
