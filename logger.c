@@ -14,6 +14,7 @@ int main(int argc, char* argv[])
 
     mkfifo(FIFO_PATH, 0666);
 
+    return 1;
     
     while(1){
 	  fd = open(FIFO_PATH, O_RDWR);

@@ -18,7 +18,7 @@
 #define SHOW_SCREENING 6
 #define EXIT_ADMIN 7
 
-#define MAX_SLOTS 10
+#define MAX_SLOTS 6
 #define MAX_HALL 10
 #define RESERVE_MOVIE 1
 #define VIEW_RESERVATIONS 2
