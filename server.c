@@ -228,7 +228,7 @@ static int delete_movie(char* name){
 
 static int add_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->movie));
-    sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->month, info->slot, 1);
+    sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->month, info->slot, info->sala);
 
     printf("Query: %s\n", stmnt);
 
@@ -238,7 +238,7 @@ static int add_screening(ScreeningInfo* info){
 
 static int delete_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD);
-    sprintf(stmnt, STMNT_DELETE_SCREENING, info->day, info->slot, 1);
+    sprintf(stmnt, STMNT_DELETE_SCREENING, info->day, info->month, info->slot, info->sala);
     
     printf("Query: %s\n", stmnt);
 
@@ -264,7 +264,7 @@ static ScreeningDataList* get_screenings(char* movie){
 
     sprintf(query, QUERY_GET_SCREENINGS, movie);
 
-    QueryData q = new_query(query, 4);
+    QueryData q = new_query(query, 5);
     do_query(database, q);
 
     char ** row;
