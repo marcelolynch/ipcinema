@@ -22,7 +22,7 @@ dia   INT CHECK(dia BETWEEN 1 AND 31),\
 mes   INT CHECK(mes BETWEEN 1 and 12),\
 slot  INT CHECK(slot > 1),\
 sala  INTEGER CHECK(sala > 1),\
-UNIQUE(dia,slot, sala),\
+UNIQUE(dia,mes,slot,sala),\
 FOREIGN KEY(nombrePelicula) REFERENCES Pelicula(nombre) ON DELETE CASCADE ON UPDATE RESTRICT\
 );\
 \

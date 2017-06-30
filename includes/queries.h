@@ -9,7 +9,7 @@
 /*Realizar Reserva*/
 #define STMNT_MAKE_RESERVATION "INSERT INTO RESERVA(cliente, proyeccionId, asiento, estado) VALUES ('%s', %d, %d, 'Reservado')"
 
-#define QUERY_GET_SCREENINGS "SELECT id,dia,mes,slot,sala FROM Proyeccion WHERE nombrePelicula = '%s' ORDER BY mes,dia;"
+#define QUERY_GET_SCREENINGS "SELECT id,dia,mes,slot,sala FROM Proyeccion WHERE nombrePelicula = '%s' ORDER BY mes,dia,slot,sala ASC;"
 
 #define QUERY_GET_MOVIE_LIST "SELECT nombre,descripcion FROM Pelicula;"
 
