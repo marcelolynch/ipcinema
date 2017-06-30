@@ -28,7 +28,7 @@
 int getClientType();
 int startClient();
 int startAdministrator();
-
+void getString(char q[],char name []);
 
 
 int start_ui(ClientInstance instance){
@@ -42,7 +42,9 @@ while(1){
 	//printf("client type %d\n",ans);
 	if(ans== CLIENT){
 		printf("----- Starting client ----- \n");
-		startClient(instance);
+		char name [128];
+		getString("What's your name?: ",name);
+		startClient(instance,name);
 	} else if (ans == ADMIN){
 		printf("----- Starting Administrator ----- \n");
 		startAdministrator(instance);
@@ -67,6 +69,7 @@ int getClientType(){
 		printf("Select a client option number: ");
 		char ans[128];
 		scanf("%s",ans);
+		clearBuffer();
 		if(!strcmp(ans,"1")){
 			return ADMIN;
 		}else if (!strcmp(ans,"2")){
@@ -99,6 +102,31 @@ int showDays(){
 		clearBuffer();
 	}
 }
+
+char * getHour(int slot){
+	char * ans;
+	switch(slot){
+		case 1: 
+			ans="00:30";
+			break;
+		case 2: 
+			ans="10:30";
+			break;
+		case 3: 
+			ans="13:30";
+			break;
+		case 4: 
+			ans="16:30";
+			break;
+		case 5: 
+			ans="19:30";
+			break;
+		case 6: 
+			ans="21:30";
+			break;
+		}
+		return ans;
+	}
 
 void showMoviesOnly(MoviesList movies){
 	int i;
@@ -219,39 +247,12 @@ void getString(char q[],char name []){
 		i++;
 	}
 	name[i]=0;
-	//scanf("%s",name);
-	//clearBuffer();
 }
 
 int getMovieInfo(char name [], char description []){
 	getString("Insert movie name: ",name);
 	getString("Insert movie description: ",description);
 	return 0;
-}
-int getSlot(){
-	while(1){
-	printf("Insert a slot (1-%d): ",MAX_SLOTS);
-	int ans;
-		if(scanf("%d",&ans)>0 && ans>0 && ans<=MAX_SLOTS){
-			clearBuffer();
-			return ans;
-		}
-		printf("Not a valid option\n\n");
-		clearBuffer();
-	}
-}
-
-int getSala(){
-	while(1){
-	printf("Insert a hall (1-%d): ",MAX_HALL);
-	int ans;
-		if(scanf("%d",&ans)>0 && ans>0 && ans<=MAX_SLOTS){
-			clearBuffer();
-			return ans;
-		}
-		printf("Not a valid option\n\n");
-		clearBuffer();
-	}
 }
 
 int getNum(char string [],int max){
@@ -292,7 +293,7 @@ int showScreenings(ScreeningsList screenings){
 	int i;
 	printf("These are the screenings: \n");
 	for(i =0; i<screenings.length ; i++){
-		printf("%d -%d/%d | Slot:%d |Hall:%d\n",i+1,screenings.list[i].day,screenings.list[i].month,screenings.list[i].slot,screenings.list[i].sala );
+		printf("%d -%d/%d | Time: %s |Hall:%d\n",i+1,screenings.list[i].day,screenings.list[i].month,getHour(screenings.list[i].slot),screenings.list[i].sala );
 	}
 	printf("Select a screening: ");
 		int ans;
@@ -304,8 +305,7 @@ int showScreenings(ScreeningsList screenings){
 		clearBuffer();
 	}
 }
-int startReservation(ClientInstance instance){
-	while(1){
+int startReservation(ClientInstance instance, char name[]){
 		// get movies from db
 		ReservationInfo res;
 		MoviesList * movies= get_movies(instance);
@@ -333,15 +333,15 @@ int startReservation(ClientInstance instance){
 			printf("Trying to reserve... \n");
 			res.seat=chosenSe;
 			strcpy(res.screening_id,screenings->list[chosenSc].id);
-			strcpy(res.client,"Juancito");
+			strcpy(res.client,name);
 			make_reservation(instance, &res);
 			return 0;
 			
 			
 		}else{
 			printf("The reservation was cancelled.\n");
+			return 0;
 		}
-	}
 }
 
 void viewReservations(char reserv[][128], int len){
@@ -376,11 +376,12 @@ int cancelReseravtion(char reserv[][128], int len){
 	}
 }
 
-int startClient(ClientInstance instance){
+int startClient(ClientInstance instance, char name []){
 	while(1){
+		printf("\n\nWelcome, %s!\n",name );
 		int option =showClientOptions();
 		if(option == RESERVE_MOVIE){
-			startReservation(instance);
+			startReservation(instance,name);
 		}else if(option == VIEW_RESERVATIONS){
 			char reserv [2][128]={"HArry postre","maluma"};
 			viewReservations(reserv,2);
@@ -442,12 +443,13 @@ int startAdministrator(ClientInstance instance){
 	}else if(option == DEL_SCREENING){
 		ScreeningInfo screening;
 		getString("Insert movie name: ",screening.movie);
-		screening.day = showDays();
-		screening.slot= getSlot();
-		screening.sala= getSlot();
+		screening.month=getNum("Insert the month:",12);
+		screening.day = getNum("Insert the day of the month:",31);
+		screening.slot= getNum("Insert the slot:",MAX_SLOTS);
+		screening.sala= getNum("Insert the hall:",MAX_HALL);
 		printf("Name: %s\n",screening.movie );
 		printf("Day: %d Slot: %d Sala:%d\n",screening.day,screening.slot,screening.sala);
-		if(askYN("Do you want add this screening?")){
+		if(askYN("Do you want delete this screening?")){
 			printf("Deleting screening ...\n");
 			delete_screening(instance,&screening);
 		}else{
