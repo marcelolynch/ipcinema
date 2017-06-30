@@ -7,6 +7,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 #define FIFO_PATH "/tmp/myfifo"
 #define LOG_PROC "logger.bin"
@@ -24,9 +25,16 @@ void set_log()
 
 }
 
-void srv_log(char * msg){
-	printf("%s\n", msg);
-	fflush(stdout);
+void srv_log(const char * fmt, ...){
+
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+    printf("\n");
+
+    fflush(stdout);
+
    /*int fd = open(FIFO_PATH, O_WRONLY);
     write(fd, msg, strlen(msg)+1);
     close(fd);

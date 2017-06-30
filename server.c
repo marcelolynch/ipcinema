@@ -129,16 +129,16 @@ static void * thread_work(void* data){
 
 static char* req_log_msg(char type){
     switch(type){
-        case REQ_MOVIE_ADD:         return "[CLIENT REQUEST] Add movie";
-        case REQ_MOVIE_DELETE:      return "[CLIENT REQUEST] Delete movie";
-        case REQ_SCREENING_ADD:     return "[CLIENT REQUEST] Add screening";
-        case REQ_SCREENING_DELETE:  return "[CLIENT REQUEST] Delete screening";
-        case REQ_MAKE_RESERVATION:  return "[CLIENT REQUEST] Make reservation";
-        case REQ_MOVIE_SCREENINGS:  return "[CLIENT REQUEST] Get screening list";
-        case REQ_SEATING_INFO:      return "[CLIENT REQUEST] Get seating info";
-        case REQ_MOVIE_LIST:        return "[CLIENT REQUEST] Get movie list";
+        case REQ_MOVIE_ADD:         return "Add movie";
+        case REQ_MOVIE_DELETE:      return "Delete movie";
+        case REQ_SCREENING_ADD:     return "Add screening";
+        case REQ_SCREENING_DELETE:  return "Delete screening";
+        case REQ_MAKE_RESERVATION:  return "Make reservation";
+        case REQ_MOVIE_SCREENINGS:  return "Get screening list";
+        case REQ_SEATING_INFO:      return "Get seating info";
+        case REQ_MOVIE_LIST:        return "Get movie list";
    
-        default:                    return "[CLIENT REQUEST] Unknown";  
+        default:                    return "Unknown";  
         }
 
 }
@@ -164,7 +164,7 @@ static synchro_type get_synchro_type(char req_type){
 
 static int process_request(ClientSession session, ClientRequest* req){
     
-    srv_log(req_log_msg(req->type));
+    srv_log("[CLIENT REQUEST] %s", req_log_msg(req->type));
 
     synchro_type r_w = get_synchro_type(req->type);
     enter_critical(r_w);
@@ -210,7 +210,6 @@ static int add_movie(MovieInfo* info){
 
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->name) + strlen(info->description));
     sprintf(stmnt, STMNT_ADD_MOVIE, info->name, info->description);
-    printf("Query: %s\n", stmnt);
     
     return execute_statements(database, stmnt);
 }
@@ -220,7 +219,6 @@ static int delete_movie(char* name){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(name));
     sprintf(stmnt, STMNT_DELETE_MOVIE, name);
 
-    printf("Query: %s\n", stmnt);
 
     return execute_statements(database, stmnt);
 
@@ -230,8 +228,6 @@ static int add_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->movie));
     sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->month, info->slot, info->sala);
 
-    printf("Query: %s\n", stmnt);
-
     return execute_statements(database, stmnt);
 }
 
@@ -240,8 +236,6 @@ static int delete_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD);
     sprintf(stmnt, STMNT_DELETE_SCREENING, info->day, info->month, info->slot, info->sala);
     
-    printf("Query: %s\n", stmnt);
-
     return execute_statements(database, stmnt);
 }
 
