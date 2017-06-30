@@ -13,7 +13,7 @@ static int check_packet_bound(int index){
 	return 1;
 }
 
-ClientRequest* movie_add(char* buf){
+ClientRequest* req_movie_add(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 
 	char* name = &buf[1];
@@ -38,7 +38,7 @@ ClientRequest* movie_add(char* buf){
 }
 
 
-ClientRequest* movie_delete(char* buf){
+ClientRequest* req_movie_delete(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	char* name = &buf[1];
 
@@ -49,7 +49,7 @@ ClientRequest* movie_delete(char* buf){
 	return req;
 }
 
-ClientRequest* screening_add(char* buf){
+ClientRequest* req_screening_add(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	req->type = REQ_SCREENING_ADD;
 	req->data = failfast_malloc(sizeof(ScreeningInfo));
@@ -63,7 +63,7 @@ ClientRequest* screening_add(char* buf){
 }
 
 
-ClientRequest* screening_delete(char* buf){
+ClientRequest* req_screening_delete(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	req->type = REQ_SCREENING_DELETE;
 	req->data = failfast_malloc(sizeof(ScreeningInfo));
@@ -75,7 +75,7 @@ ClientRequest* screening_delete(char* buf){
 }
 
 
-ClientRequest* make_reservation(char* buf){
+ClientRequest* req_make_reservation(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	req->type = REQ_MAKE_RESERVATION;
 	req->data = failfast_malloc(sizeof(ReservationInfo));
@@ -96,7 +96,7 @@ ClientRequest* make_reservation(char* buf){
 }
 
 
-ClientRequest* movie_info(char* buf){
+ClientRequest* req_movie_info(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	req->type = REQ_MOVIE_INFO;
 	req->data = failfast_malloc(strlen(&buf[1] + 1));
@@ -105,7 +105,7 @@ ClientRequest* movie_info(char* buf){
 }
 
 
-ClientRequest* movie_screenings(char* buf){
+ClientRequest* req_movie_screenings(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 
 	req->type = REQ_MOVIE_SCREENINGS;
@@ -116,7 +116,7 @@ ClientRequest* movie_screenings(char* buf){
 }
 
 
-ClientRequest* seating_info(char* buf){
+ClientRequest* req_seating_info(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 
 	req->type = REQ_SEATING_INFO;
@@ -127,14 +127,14 @@ ClientRequest* seating_info(char* buf){
 }
 
 
-ClientRequest* movie_list(char* buf){
+ClientRequest* req_movie_list(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	req->type = REQ_MOVIE_LIST;
 	return req;
 }
 
 
-ClientRequest* reservation_list(char* buf){
+ClientRequest* req_reservation_list(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 
 	if(buf[1] == 0){

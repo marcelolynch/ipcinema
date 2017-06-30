@@ -1,20 +1,19 @@
-
-/*Listado de Peliculas*/
-#define MOVIES "SELECT nombre \
-FROM Pelicula;"
-
-/*Descripcion de Pelicula*/
-#define DESCRIPTIONS "SELECT descripcion \
-FROM Pelicula WHERE %s"
-
 /*Agregar Pelicula al listado*/
-#define ADD_MOVIE "INSERT INTO Pelicula(nombre, descripcion) VALUES ('%s', '%s');"
+#define STMNT_ADD_MOVIE "INSERT INTO Pelicula(nombre, descripcion) VALUES ('%s', '%s');"
 
-#define ADD_SCREENING "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('%s', %d, %d, %d);"
+#define STMNT_ADD_SCREENING "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('%s', %d, %d, %d);"
 
-#define DELETE_SCREENING "DELETE FROM Proyeccion WHERE dia = %d AND slot = %d AND sala = %d;"
+#define STMNT_DELETE_SCREENING "DELETE FROM Proyeccion WHERE dia = %d AND slot = %d AND sala = %d;"
 
-#define DELETE_MOVIE "DELETE FROM Pelicula WHERE nombre = '%s';"
+#define STMNT_DELETE_MOVIE "DELETE FROM Pelicula WHERE nombre = '%s';"
+/*Realizar Reserva*/
+#define STMNT_MAKE_RESERVATION "INSERT INTO RESERVA(cliente, proyeccionId, asiento, estado) VALUES ('%s', %d, %d, 'Reservado')"
+
+#define QUERY_GET_SCREENINGS "SELECT id,dia,slot,sala FROM Proyeccion WHERE nombrePelicula = '%s';"
+
+#define QUERY_GET_MOVIE_LIST "SELECT nombre,descripcion FROM Pelicula;"
+
+#define QUERY_OCCUPIED_SEATS "SELECT asiento FROM reserva WHERE proyeccionID = %s"
 
 /*Asientos reservados*/
 #define RESERVED "SELECT cliId , nombrePelicula , proyeccionID,asiento \

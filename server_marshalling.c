@@ -95,16 +95,16 @@ ClientRequest * wait_request(ClientSession cli){
 	srv_log("Received request");
 
 	switch(buf[0]){
-		case MOVIE_ADD: 		return movie_add(buf);
-		case MOVIE_DELETE: 		return movie_delete(buf);
-		case SCREENING_ADD: 	return screening_add(buf);
-		case SCREENING_DELETE: 	return screening_delete(buf);
-		case MAKE_RESERVATION: 	return make_reservation(buf);
-		case MOVIE_INFO: 		return movie_info(buf);
-		case MOVIE_SCREENINGS:	return movie_screenings(buf);
-		case SEATING_INFO:		return seating_info(buf);
-		case MOVIE_LIST:		return movie_list(buf);
-		case RESERVATION_LIST:	return reservation_list(buf);
+		case MOVIE_ADD: 		return req_movie_add(buf);
+		case MOVIE_DELETE: 		return req_movie_delete(buf);
+		case SCREENING_ADD: 	return req_screening_add(buf);
+		case SCREENING_DELETE: 	return req_screening_delete(buf);
+		case MAKE_RESERVATION: 	return req_make_reservation(buf);
+		case MOVIE_INFO: 		return req_movie_info(buf);
+		case MOVIE_SCREENINGS:	return req_movie_screenings(buf);
+		case SEATING_INFO:		return req_seating_info(buf);
+		case MOVIE_LIST:		return req_movie_list(buf);
+		case RESERVATION_LIST:	return req_reservation_list(buf);
 		default:
 			srv_log("[WARNING] Received unknown request. Ignoring...");
 	}

@@ -112,7 +112,11 @@ static void * thread_work(void* data){
             continue;
         } 
         else {
-            int r = process_request(session,req);
+
+            pthread_mutex_lock(&mtx);
+            int r = process_request(session,req); //Zona crítica
+            pthread_mutex_unlock(&mtx);
+
             if(r > 0){
                 client_send_ok(session); 
             }
@@ -125,67 +129,44 @@ static void * thread_work(void* data){
 
 }
 
+static char* req_log_msg(char type){
+    switch(type){
+        case REQ_MOVIE_ADD:         return "[CLIENT REQUEST] Add movie";
+        case REQ_MOVIE_DELETE:      return "[CLIENT REQUEST] Delete movie";
+        case REQ_SCREENING_ADD:     return "[CLIENT REQUEST] Add screening";
+        case REQ_SCREENING_DELETE:  return "[CLIENT REQUEST] Delete screening";
+        case REQ_MAKE_RESERVATION:  return "[CLIENT REQUEST] Make reservation";
+        case REQ_MOVIE_SCREENINGS:  return "[CLIENT REQUEST] Get screening list";
+        case REQ_SEATING_INFO:      return "[CLIENT REQUEST] Get seating info";
+        case REQ_MOVIE_LIST:        return "[CLIENT REQUEST] Get movie list";
+   
+        default:                    return "[CLIENT REQUEST] Unknown";  
+        }
+
+}
+
 static int process_request(ClientSession session, ClientRequest* req){
+    
+    srv_log(req_log_msg(req->type));
+
     switch(req->type){
-    case REQ_MOVIE_ADD:
-        {
-            srv_log("[CLIENT REQUEST] Add movie");
-            return add_movie((MovieInfo*)req->data);
-            break;
-        }
-        case REQ_MOVIE_DELETE:
-        {
-            srv_log("[CLIENT REQUEST] Delete movie");
-            return delete_movie((char*)req->data);
-            break;
-        }
-
-        case REQ_SCREENING_ADD:
-        {
-            srv_log("[CLIENT REQUEST] Screening add");
-            return add_screening((ScreeningInfo*)req->data);
-            break;
-        }
-
-        case REQ_SCREENING_DELETE:
-        {
-            srv_log("[CLIENT REQUEST] Screening delete");
-            return delete_screening((ScreeningInfo*)req->data);
-            break;
-        }
-        case REQ_MAKE_RESERVATION:
-        {
-            srv_log("[CLIENT REQUEST] Make reservation");
-            return make_reservation((ReservationInfo*)req->data);
-            break;
-
-        }
-        case REQ_MOVIE_SCREENINGS:
-        {
-            srv_log("[CLIENT REQUEST] Movie screenings");
-            return send_screenings(session, get_screenings((char*)req->data));
-        }
-        case REQ_SEATING_INFO:
-        {
-            srv_log("[CLIENT REQUEST] Seating info");
-            return send_seating_info(session, (char*)req->data);
-
-        }
-        case REQ_MOVIE_LIST:
-        {
-            srv_log("[CLIENT REQUEST] Movie list");
-            return send_movies(session, get_movies());
-        }
-        default:
-            return -1;
-            break;
+        case REQ_MOVIE_ADD:         return add_movie((MovieInfo*)req->data);
+        case REQ_MOVIE_DELETE:      return delete_movie((char*)req->data);
+        case REQ_SCREENING_ADD:     return add_screening((ScreeningInfo*)req->data);
+        case REQ_SCREENING_DELETE:  return delete_screening((ScreeningInfo*)req->data);
+        case REQ_MAKE_RESERVATION:  return make_reservation((ReservationInfo*)req->data);
+        case REQ_MOVIE_SCREENINGS:  return send_screenings(session, get_screenings((char*)req->data));
+        case REQ_SEATING_INFO:      return send_seating_info(session, (char*)req->data);
+        case REQ_MOVIE_LIST:        return send_movies(session, get_movies());
+        
+        default:                    return -1;
     }
 }
 
 
 static int add_movie(MovieInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->name) + strlen(info->description));
-    sprintf(stmnt, ADD_MOVIE, info->name, info->description);
+    sprintf(stmnt, STMNT_ADD_MOVIE, info->name, info->description);
     printf("Query: %s\n", stmnt);
     
     return execute_statements(database, stmnt);
@@ -194,7 +175,7 @@ static int add_movie(MovieInfo* info){
 
 static int delete_movie(char* name){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(name));
-    sprintf(stmnt, DELETE_MOVIE, name);
+    sprintf(stmnt, STMNT_DELETE_MOVIE, name);
 
     printf("Query: %s\n", stmnt);
 
@@ -204,7 +185,7 @@ static int delete_movie(char* name){
 
 static int add_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->movie));
-    sprintf(stmnt, ADD_SCREENING, info->movie, info->day, info->slot, 1);
+    sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->slot, 1);
 
     printf("Query: %s\n", stmnt);
 
@@ -214,7 +195,7 @@ static int add_screening(ScreeningInfo* info){
 
 static int delete_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD);
-    sprintf(stmnt, DELETE_SCREENING, info->day, info->slot, 1);
+    sprintf(stmnt, STMNT_DELETE_SCREENING, info->day, info->slot, 1);
     
     printf("Query: %s\n", stmnt);
 
@@ -225,7 +206,7 @@ static int delete_screening(ScreeningInfo* info){
 static int make_reservation(ReservationInfo* info){
     char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
-    sprintf(query, "INSERT INTO RESERVA(cliente, proyeccionId, asiento, estado) VALUES ('%s', %d, %d, 'Reservado')", info->client, info->screening_id, info->seat);
+    sprintf(query, STMNT_MAKE_RESERVATION, info->client, info->screening_id, info->seat);
 
     int r = execute_statements(database, query);
 
@@ -238,7 +219,7 @@ static int make_reservation(ReservationInfo* info){
 static ScreeningDataList* get_screenings(char* movie){
     char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
-    sprintf(query, "SELECT id,dia,slot,sala FROM Proyeccion WHERE nombrePelicula = '%s';", movie);
+    sprintf(query, QUERY_GET_SCREENINGS, movie);
 
     QueryData q = new_query(query, 4);
     do_query(database, q);
@@ -281,7 +262,7 @@ static ScreeningDataList* get_screenings(char* movie){
 static MovieInfoList* get_movies(){
     char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
-    sprintf(query, "SELECT nombre,descripcion FROM Pelicula");
+    sprintf(query, QUERY_GET_MOVIE_LIST);
 
     QueryData q = new_query(query, 2);
     do_query(database, q);
@@ -320,7 +301,7 @@ static MovieInfoList* get_movies(){
 static int send_seating_info(ClientSession session, char* screening_id){
     char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
-    sprintf(query, "SELECT asiento FROM reserva WHERE proyeccionID = %s", screening_id);
+    sprintf(query, QUERY_OCCUPIED_SEATS, screening_id);
     QueryData q = new_query(query, 1);
     do_query(database, q);
 
