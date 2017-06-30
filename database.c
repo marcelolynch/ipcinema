@@ -127,7 +127,7 @@ int do_query(DbSession session, QueryData qdata){
 		  return rc;    	
     }
 
-    srv_log("Succesful query");
+    srv_log("[DATABASE] Successful query");
     return 1;
 }
 
@@ -149,7 +149,7 @@ int execute_statements(DbSession session, char* statements){
 
     }
   
-    srv_log("Succesful query");
+    srv_log("[DATABASE] Succesful query");
     return 1;
 
 }
@@ -254,13 +254,8 @@ int n_rows(QueryData q){
 static int increase_capacity(QueryData q){
   if(q == NULL) return -1;
 
-  char* **newdata = realloc(q->data, 2*q->capacity*sizeof(char**));
-  
-  if(newdata == NULL){
-    //No memory
-    return -1;
-  }
-  
+  char* **newdata = failfast_realloc(q->data, 2*q->capacity*sizeof(char**));
+    
   q->data = newdata;
   q->capacity = 2*q->capacity;
 

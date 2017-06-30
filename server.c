@@ -339,6 +339,7 @@ static MovieInfoList* get_movies(){
 }
 
 
+#define MAX_SEATS 300
 
 static int send_seating_info(ClientSession session, char* screening_id){
     char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
@@ -347,7 +348,7 @@ static int send_seating_info(ClientSession session, char* screening_id){
     QueryData q = new_query(query, 1);
     do_query(database, q);
 
-    char* seats = calloc(100,1);
+    char* seats = failfast_calloc(MAX_SEATS,1);
     char** row;
     while((row = next_row(q)) != NULL){
         seats[atoi(row[0])] = 1;
