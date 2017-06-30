@@ -1,6 +1,7 @@
 #include "sqlite3.h"
 #include "callback.h"
 #include "db.h"
+#include "utilities.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -17,10 +18,11 @@ CREATE TABLE IF NOT EXISTS Proyeccion\
 (\
 id INTEGER PRIMARY KEY AUTOINCREMENT,\
 nombrePelicula  TEXT,\
-dia   INT CHECK(dia BETWEEN 1 AND 7),\
-slot  INT CHECK(slot BETWEEN 1 AND 8),\
-sala  INTEGER CHECK(sala BETWEEN 1 and 10),\
-UNIQUE(dia,slot, sala),\
+dia   INT CHECK(dia BETWEEN 1 AND 31),\
+mes   INT CHECK(mes BETWEEN 1 and 12),\
+slot  INT CHECK(slot >= 1),\
+sala  INTEGER CHECK(sala >= 1),\
+UNIQUE(dia,mes,slot,sala),\
 FOREIGN KEY(nombrePelicula) REFERENCES Pelicula(nombre) ON DELETE CASCADE ON UPDATE RESTRICT\
 );\
 \
@@ -32,18 +34,6 @@ asiento INTEGER,\
 estado  TEXT,\
 PRIMARY KEY(proyeccionID, asiento),\
 FOREIGN KEY(proyeccionID) REFERENCES Proyeccion(id) ON DELETE CASCADE ON UPDATE RESTRICT\
-);\
-\
-CREATE TABLE IF NOT EXISTS Cliente\
-(\
-id  INT,\
-dni INT,\
-nombre  TEXT,\
-apellido  TEXT,\
-direccion TEXT,\
-telefono  TEXT,\
-PRIMARY KEY(ID),\
-UNIQUE(dni)\
 );"
 
 // En reservas:
@@ -91,7 +81,7 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName);
 
 
 DbSession db_init(){
-	DbSession session = malloc(sizeof(*session));
+	DbSession session = failfast_malloc(sizeof(*session));
 
     int rc = sqlite3_open(DATABASE_FILENAME, &session->db);
     
@@ -185,14 +175,14 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName){
   }
 
   // Reservo espacio para una fila mas
-  q->data[q->rows] = malloc(q->cols * sizeof(char*)); 
+  q->data[q->rows] = failfast_malloc(q->cols * sizeof(char*)); 
 
   for (i = 0; i < nrCols ; i++){
     if(colElems[i] == NULL){
       q->data[q->rows][i] = NULL;
     } 
     else {
-      q->data[q->rows][i] = malloc(strlen(colElems[i]) + 1);
+      q->data[q->rows][i] = failfast_malloc(strlen(colElems[i]) + 1);
       strcpy(q->data[q->rows][i], colElems[i]);
     }
   }
@@ -228,18 +218,18 @@ void destroy_query_data(QueryData q){
 
 
 QueryData new_query(char* query, int cols){
-  QueryData q = malloc(sizeof(*q));
+  QueryData q = failfast_malloc(sizeof(*q));
   if(q == NULL){
       return q;
   }
 
-  q->query = malloc(strlen(query) + 1);
+  q->query = failfast_malloc(strlen(query) + 1);
   strcpy(q->query, query);
 
   q->cursor = 0;
   q->rows = 0;
   q->cols = cols;
-  q->data = malloc(INITIAL_CAPACITY * sizeof(char* *));
+  q->data = failfast_malloc(INITIAL_CAPACITY * sizeof(char* *));
   q->capacity = INITIAL_CAPACITY;
 
   return q;
@@ -281,7 +271,7 @@ char ** next_row(QueryData q){
   if(q->cursor >= q->rows){
     return NULL;  //No existe una siguiente
   }
-  char ** res = malloc(q->cols*sizeof(char*)); 
+  char ** res = failfast_malloc(q->cols*sizeof(char*)); 
   int i;
   for(i = 0 ; i < q->cols ; i++){
     res[i] = q->data[q->cursor][i];

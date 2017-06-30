@@ -73,8 +73,10 @@ void add_screening(ClientInstance instance, ScreeningInfo* screening){
 	clear_buffer();
 	buf[0] = SCREENING_ADD;
 	buf[1] = screening->day;
-	buf[2] = screening->slot;
-	strcpy(&buf[3], screening->movie);
+	buf[2] = screening->month;
+	buf[3] = screening->slot;
+	buf[4] = screening->sala;
+	strcpy(&buf[5], screening->movie);
 
 	client_send(instance,buf);
 	wait_ack(instance);
@@ -86,7 +88,8 @@ void delete_screening(ClientInstance instance, ScreeningInfo* screening){
 	clear_buffer();
 	buf[0] = SCREENING_DELETE;
 	buf[1] = screening->day;
-	buf[2] = screening->slot;
+	buf[2] = screening->day;
+	buf[3] = screening->slot;
 
 	client_send(instance,buf);
 	wait_ack(instance);
@@ -155,9 +158,10 @@ ScreeningsList* get_screenings(ClientInstance instance, MovieInfo* movie){
 			break;
 		}	
 		screenings->list[i].day = buf[1];
-		screenings->list[i].slot = buf[2];
-		screenings->list[i].sala = buf[3];
-		strcpy(screenings->list[i].id, &buf[4]);
+		screenings->list[i].month = buf[2];
+		screenings->list[i].slot = buf[3];
+		screenings->list[i].sala = buf[4];
+		strcpy(screenings->list[i].id, &buf[5]);
 		i++;
 
 		buf[0] = TRANSACTION_NEXT;
