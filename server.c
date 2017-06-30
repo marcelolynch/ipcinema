@@ -4,6 +4,7 @@
 #include "server.h"
 #include "server_logging.h"
 #include "server_marshalling.h"
+#include "utilities.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,7 +85,7 @@ int num = 0;
 int new_thread(ClientSession client){
     pthread_t thread;
 
-    ThreadInfo* info = malloc(sizeof(ThreadInfo));
+    ThreadInfo* info = failfast_malloc(sizeof(ThreadInfo));
     info->session = client;
     info->number = num++;
     
@@ -107,7 +108,7 @@ static void * thread_work(void* data){
         
         ClientRequest * req = wait_request(info->session);
         if(req == NULL){
-            client_send_error(session);
+            client_send_error(session, INVALID_REQUEST);
             continue;
         } 
         else {
@@ -116,7 +117,7 @@ static void * thread_work(void* data){
                 client_send_ok(session); 
             }
             else{
-                client_send_error(session);
+                client_send_error(session, r);
             }
         }
      }
@@ -183,7 +184,7 @@ static int process_request(ClientSession session, ClientRequest* req){
 
 
 static int add_movie(MovieInfo* info){
-    char * stmnt = malloc(QUERY_LEN_OVERHEAD + strlen(info->name) + strlen(info->description));
+    char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->name) + strlen(info->description));
     sprintf(stmnt, ADD_MOVIE, info->name, info->description);
     printf("Query: %s\n", stmnt);
     
@@ -192,7 +193,7 @@ static int add_movie(MovieInfo* info){
 
 
 static int delete_movie(char* name){
-    char * stmnt = malloc(QUERY_LEN_OVERHEAD + strlen(name));
+    char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(name));
     sprintf(stmnt, DELETE_MOVIE, name);
 
     printf("Query: %s\n", stmnt);
@@ -202,7 +203,7 @@ static int delete_movie(char* name){
 }
 
 static int add_screening(ScreeningInfo* info){
-    char * stmnt = malloc(QUERY_LEN_OVERHEAD + strlen(info->movie));
+    char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->movie));
     sprintf(stmnt, ADD_SCREENING, info->movie, info->day, info->slot, 1);
 
     printf("Query: %s\n", stmnt);
@@ -212,7 +213,7 @@ static int add_screening(ScreeningInfo* info){
 
 
 static int delete_screening(ScreeningInfo* info){
-    char * stmnt = malloc(QUERY_LEN_OVERHEAD);
+    char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD);
     sprintf(stmnt, DELETE_SCREENING, info->day, info->slot, 1);
     
     printf("Query: %s\n", stmnt);
@@ -222,7 +223,7 @@ static int delete_screening(ScreeningInfo* info){
 
 
 static int make_reservation(ReservationInfo* info){
-    char * query = malloc(QUERY_LEN_OVERHEAD);
+    char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
     sprintf(query, "INSERT INTO RESERVA(cliente, proyeccionId, asiento, estado) VALUES ('%s', %d, %d, 'Reservado')", info->client, info->screening_id, info->seat);
 
@@ -235,7 +236,7 @@ static int make_reservation(ReservationInfo* info){
 
 
 static ScreeningDataList* get_screenings(char* movie){
-    char * query = malloc(QUERY_LEN_OVERHEAD);
+    char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
     sprintf(query, "SELECT id,dia,slot,sala FROM Proyeccion WHERE nombrePelicula = '%s';", movie);
 
@@ -249,7 +250,7 @@ static ScreeningDataList* get_screenings(char* movie){
         return NULL;
     }
 
-    ScreeningDataList* list = malloc(sizeof(*list));
+    ScreeningDataList* list = failfast_malloc(sizeof(*list));
     
     strcpy(list->data.id, row[0]);
     list->data.day = atoi(row[1]); 
@@ -261,7 +262,7 @@ static ScreeningDataList* get_screenings(char* movie){
     ScreeningDataList* p = list;
 
     while((row = next_row(q)) != NULL){
-        p->next = malloc(sizeof(*p));
+        p->next = failfast_malloc(sizeof(*p));
         p = p->next;
         strcpy(p->data.id, row[0]);
         p->data.day = atoi(row[1]); 
@@ -278,7 +279,7 @@ static ScreeningDataList* get_screenings(char* movie){
 
 
 static MovieInfoList* get_movies(){
-    char * query = malloc(QUERY_LEN_OVERHEAD);
+    char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
     sprintf(query, "SELECT nombre,descripcion FROM Pelicula");
 
@@ -292,7 +293,7 @@ static MovieInfoList* get_movies(){
         return NULL;
     }
 
-    MovieInfoList* list = malloc(sizeof(*list));
+    MovieInfoList* list = failfast_malloc(sizeof(*list));
     
     strcpy(list->info.name, row[0]);
     strcpy(list->info.description, row[1]); 
@@ -301,7 +302,7 @@ static MovieInfoList* get_movies(){
     MovieInfoList* p = list;
 
     while((row = next_row(q)) != NULL){
-        p->next = malloc(sizeof(*p));
+        p->next = failfast_malloc(sizeof(*p));
         p = p->next;
       
         strcpy(p->info.name, row[0]);
@@ -317,7 +318,7 @@ static MovieInfoList* get_movies(){
 
 
 static int send_seating_info(ClientSession session, char* screening_id){
-    char * query = malloc(QUERY_LEN_OVERHEAD);
+    char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
     sprintf(query, "SELECT asiento FROM reserva WHERE proyeccionID = %s", screening_id);
     QueryData q = new_query(query, 1);

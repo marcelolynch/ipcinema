@@ -5,7 +5,7 @@
 #define ERROR				30
 #define ERR_UNKNOWN   		31
 #define ERR_NO_SUCH_DATA	32
-
+#define ERR_INVALID_PACKET  33
 
 
 #define TRANSACTION_BEGIN	70
@@ -24,6 +24,7 @@
 #define MOVIE_SCREENINGS	7
 #define SEATING_INFO		8
 #define MOVIE_LIST			9
+#define RESERVATION_LIST	10
 
 
 #endif

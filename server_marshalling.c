@@ -4,6 +4,9 @@
 #include "server_marshalling.h"
 #include "server_logging.h"
 #include "protocol.h"
+#include "request_constructor.h"
+#include "utilities.h"
+
 
 
 #include <pthread.h>
@@ -21,20 +24,15 @@ struct serverinstanceCDT {
 
 struct clientsessionCDT {
 	Connection con;
+	char status;
 };
 
 typedef struct serverinstanceCDT* ServerInstance;
 typedef struct clientsessionCDT* ClientSession;
 
 
-char buf[PACKET_LENGTH];
-
-static void clear_buffer(){
-	memset(buf, 0, PACKET_LENGTH);
-}
-
 ServerInstance server_init(int port){
-	ServerInstance session = malloc(sizeof(struct serverinstanceCDT));
+	ServerInstance session = failfast_malloc(sizeof(struct serverinstanceCDT));
 
 	session->addr = open_socket(NULL, port);
 
@@ -64,7 +62,7 @@ ClientSession wait_client(ServerInstance srv){
 		return NULL;
 	}
 
-	ClientSession cli = malloc(sizeof(struct clientsessionCDT));
+	ClientSession cli = failfast_malloc(sizeof(struct clientsessionCDT));
 	cli->con = c;
 
 	return cli;
@@ -79,7 +77,9 @@ void end_session(ClientSession session){
 
 
 ClientRequest * wait_request(ClientSession cli){
-	clear_buffer();
+	//El buffer termina con un cero para protegerme
+	//Cuando hago strlen de no sobrepasarme del buffer
+	char buf[PACKET_LENGTH + 1] = {0};
 
 	int rd = receive_message(cli->con, buf);
 	if(!rd){
@@ -93,113 +93,29 @@ ClientRequest * wait_request(ClientSession cli){
 	sprintf(str, "Received request: %d bytes", rd);
 
 	srv_log("Received request");
-	ClientRequest * req = malloc(sizeof(*req));
-	
 
 	switch(buf[0]){
-		case MOVIE_ADD:
-		{
-			char* name = &buf[1];
-			char* desc = &buf[1+strlen(name)+1];
-
-			req->type = REQ_MOVIE_ADD;
-			req->data = malloc(sizeof(MovieInfo));
-			
-			MovieInfo* moviedata = (MovieInfo*)req->data;
-			strcpy(moviedata->name, name);
-			strcpy(moviedata->description, desc);			
-			
-			break;
-		}
-		case MOVIE_DELETE:
-		{
-			char* name = &buf[1];
-			srv_log(str);
-			
-			req->type = REQ_MOVIE_DELETE;
-			req->data = malloc(strlen(name) + 1);
-			strcpy((char*)req->data, name);
-			
-			break;
-		}
-
-		case SCREENING_ADD:
-		{
-			req->type = REQ_SCREENING_ADD;
-			req->data = malloc(sizeof(ScreeningInfo));
-			ScreeningInfo* info = (ScreeningInfo*)req->data;
-
-			info->day = buf[1];
-			info->slot = buf[2];
-			strcpy(info->movie, &buf[3]);
-			
-			break;
-		}
-
-		case SCREENING_DELETE:
-		{
-			req->type = REQ_SCREENING_DELETE;
-			req->data = malloc(sizeof(ScreeningInfo));
-			ScreeningInfo* info = (ScreeningInfo*)req->data;
-
-			info->day = buf[1];
-			info->slot = buf[2];
-			break;
-		}
-
-		case MAKE_RESERVATION:
-		{
-			req->type = REQ_MAKE_RESERVATION;
-			req->data = malloc(sizeof(ReservationInfo));
-			ReservationInfo* info = (ReservationInfo*)req->data;
-			info->seat = buf[1];
-
-			info->screening_id = atoi(&buf[2]);
-
-			strcpy(info->client, &buf[2 + strlen(&buf[2]) + 1]);
-			break;
-		}
-
-		case MOVIE_INFO:
-		{
-			req->type = REQ_MOVIE_INFO;
-			req->data = malloc(strlen(&buf[1] + 1));
-			strcpy((char*)req->data, &buf[1]);	
-			break;
-		}
-
-		case MOVIE_SCREENINGS:
-		{	
-			req->type = REQ_MOVIE_SCREENINGS;
-			req->data = malloc(strlen(&buf[1] + 1));
-			strcpy((char*)req->data, &buf[1]);	
-			break;
-		}
-
-		case SEATING_INFO:
-		{
-			req->type = REQ_SEATING_INFO;
-			req->data = malloc(strlen(&buf[1] + 1));
-			strcpy((char*)req->data, &buf[1]);	
-			break;
-		}
-		case MOVIE_LIST:
-		{
-			req->type = REQ_MOVIE_LIST;
-			break;
-		}
+		case MOVIE_ADD: 		return movie_add(buf);
+		case MOVIE_DELETE: 		return movie_delete(buf);
+		case SCREENING_ADD: 	return screening_add(buf);
+		case SCREENING_DELETE: 	return screening_delete(buf);
+		case MAKE_RESERVATION: 	return make_reservation(buf);
+		case MOVIE_INFO: 		return movie_info(buf);
+		case MOVIE_SCREENINGS:	return movie_screenings(buf);
+		case SEATING_INFO:		return seating_info(buf);
+		case MOVIE_LIST:		return movie_list(buf);
+		case RESERVATION_LIST:	return reservation_list(buf);
 		default:
 			srv_log("[WARNING] Received unknown request. Ignoring...");
-			break;
 	}
 
-	return req;
+	return NULL;
 
 }
 
 
 int send_screenings(ClientSession session, ScreeningDataList* screenings){
-	clear_buffer();
+	char buf[PACKET_LENGTH] = {0};
 	char count = 0;
 
 	ScreeningDataList* runner = screenings;
@@ -222,6 +138,8 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 		buf[1] = screenings->data.day;
 		buf[2] = screenings->data.slot;
 		buf[3] = screenings->data.sala;
+
+
 		strcpy(&buf[4], screenings->data.id);
 
 		aux = screenings;
@@ -249,7 +167,7 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 
 //TODO: codigo repetido
 int send_movies(ClientSession session, MovieInfoList* movies){
-	clear_buffer();
+	char buf[PACKET_LENGTH] = {0};
 	char count = 0;
 
 	MovieInfoList* runner = movies;
@@ -294,22 +212,33 @@ int send_movies(ClientSession session, MovieInfoList* movies){
 }
 
 
-
 int send_seats(ClientSession session, char* seats){
+	char buf[PACKET_LENGTH];
 	buf[0] = OK;
 	memcpy(&buf[1], seats, 100);
 	send_message(session->con, buf);
 	return 1;
 }
 
-void client_send_error(ClientSession cli){
-	clear_buffer();
+static char get_error_code(error_t error){
+	switch(error){
+		case INVALID_REQUEST: return ERR_INVALID_PACKET;
+		
+		default: return ERR_UNKNOWN;	
+	}
+}
+
+void client_send_error(ClientSession cli, error_t error){
+	char buf[PACKET_LENGTH];
 	buf[0] = ERROR;
+	buf[1] = get_error_code(error);
 	send_message(cli->con, buf);
 }
 
+
+
 void client_send_ok(ClientSession cli){
-	clear_buffer();
+	char buf[PACKET_LENGTH] = {0};
 	buf[0] = OK;
 	send_message(cli->con, buf);
 }

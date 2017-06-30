@@ -2,8 +2,8 @@ CC = gcc
 CFLAGS = -Wall -I $(INCLUDE_DIR)
 
 INCLUDE_DIR = ./includes
-COMMON_SOURCES = sockets.c errors.c
-SERVER_SOURCES = server.c server_marshalling.c server_logging.c database.c sqlite3.c
+COMMON_SOURCES = sockets.c errors.c utilities.c
+SERVER_SOURCES = server.c server_marshalling.c server_logging.c request_constructor.c database.c sqlite3.c
 SERVER_FLAGS = -pthread -ldl
 CLIENT_SOURCES = client.c ui.c client_marshalling.c 
 CLIENT_DEBUG = client_debug.c client_marshalling.c 

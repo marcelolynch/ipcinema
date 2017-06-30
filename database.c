@@ -1,6 +1,7 @@
 #include "sqlite3.h"
 #include "callback.h"
 #include "db.h"
+#include "utilities.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -79,7 +80,7 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName);
 
 
 DbSession db_init(){
-	DbSession session = malloc(sizeof(*session));
+	DbSession session = failfast_malloc(sizeof(*session));
 
     int rc = sqlite3_open(DATABASE_FILENAME, &session->db);
     
@@ -173,14 +174,14 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName){
   }
 
   // Reservo espacio para una fila mas
-  q->data[q->rows] = malloc(q->cols * sizeof(char*)); 
+  q->data[q->rows] = failfast_malloc(q->cols * sizeof(char*)); 
 
   for (i = 0; i < nrCols ; i++){
     if(colElems[i] == NULL){
       q->data[q->rows][i] = NULL;
     } 
     else {
-      q->data[q->rows][i] = malloc(strlen(colElems[i]) + 1);
+      q->data[q->rows][i] = failfast_malloc(strlen(colElems[i]) + 1);
       strcpy(q->data[q->rows][i], colElems[i]);
     }
   }
@@ -216,18 +217,18 @@ void destroy_query_data(QueryData q){
 
 
 QueryData new_query(char* query, int cols){
-  QueryData q = malloc(sizeof(*q));
+  QueryData q = failfast_malloc(sizeof(*q));
   if(q == NULL){
       return q;
   }
 
-  q->query = malloc(strlen(query) + 1);
+  q->query = failfast_malloc(strlen(query) + 1);
   strcpy(q->query, query);
 
   q->cursor = 0;
   q->rows = 0;
   q->cols = cols;
-  q->data = malloc(INITIAL_CAPACITY * sizeof(char* *));
+  q->data = failfast_malloc(INITIAL_CAPACITY * sizeof(char* *));
   q->capacity = INITIAL_CAPACITY;
 
   return q;
@@ -269,7 +270,7 @@ char ** next_row(QueryData q){
   if(q->cursor >= q->rows){
     return NULL;  //No existe una siguiente
   }
-  char ** res = malloc(q->cols*sizeof(char*)); 
+  char ** res = failfast_malloc(q->cols*sizeof(char*)); 
   int i;
   for(i = 0 ; i < q->cols ; i++){
     res[i] = q->data[q->cursor][i];
