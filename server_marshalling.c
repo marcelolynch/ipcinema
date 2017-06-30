@@ -83,7 +83,7 @@ ClientRequest * wait_request(ClientSession cli){
 
 	int rd = receive_message(cli->con, buf);
 	if(!rd){
-		srv_log("Error in receive. Closing connection");
+		srv_log("[ERROR] Closed socker or error in receive. Closing connection");
 		destroy_connection(cli->con);
 		free(cli);
 		pthread_exit(NULL);

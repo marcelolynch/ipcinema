@@ -98,14 +98,14 @@ DbSession db_init(){
 
     if (rc != SQLITE_OK ) {
         
-        printf("[ERRROR] Failed to create database tables.\n");
-        printf("[ERROR] SQL error: %s\n", session->err_msg);
+        srv_log("[ERRROR] Failed to create database tables.\n");
+        srv_log("[ERROR] SQL error: %s\n", session->err_msg);
         sqlite3_free(session->err_msg);
         free(session);
         return NULL;
 
     } else {
-        printf("Database Cinema created successfully!\n");
+        srv_log("Successful database setup\n");
     	return session;
     }
 
@@ -117,6 +117,9 @@ DbSession db_init(){
 // QueryData tiene que haber sido inicializada antes y ser
 // consistente con la query
 int do_query(DbSession session, QueryData qdata){
+
+  srv_log("[DATABASE] Query: %s", qdata->query);
+
 	int rc = sqlite3_exec(session->db, qdata->query, callback, qdata, &session->err_msg);
 
     if (rc != SQLITE_OK ) {
@@ -132,6 +135,7 @@ int do_query(DbSession session, QueryData qdata){
 // Ejecuta sentencias SQL sin esperar una respuesta de la base de datos
 // TODO: TAD para statements? Manejo de errores
 int execute_statements(DbSession session, char* statements){
+  srv_log("[DATABASE] Query: %s", statements);
 
 	int rc = sqlite3_exec(session->db, statements, NULL, NULL, &session->err_msg);
 
@@ -166,7 +170,7 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName){
   QueryData q = res;
 
   if(nrCols != q->cols){
-    printf("Consistency error! Should never happen\n");
+    srv_log("Consistency error! Should never happen\n");
   }
 
   // q->rows apunta al indice de la siguiente fila a llenar
