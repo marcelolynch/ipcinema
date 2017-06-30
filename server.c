@@ -277,10 +277,10 @@ static ScreeningDataList* get_screenings(char* movie){
     ScreeningDataList* list = failfast_malloc(sizeof(*list));
     
     strcpy(list->data.id, row[0]);
-    p->data.day = atoi(row[1]); 
-    p->data.month = atoi(row[2]); 
-    p->data.slot = atoi(row[3]); 
-    p->data.sala = atoi(row[4]); 
+    list->data.day = atoi(row[1]); 
+    list->data.month = atoi(row[2]); 
+    list->data.slot = atoi(row[3]); 
+    list->data.sala = atoi(row[4]); 
  
     list->next = NULL;
 

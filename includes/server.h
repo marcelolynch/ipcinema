@@ -45,13 +45,16 @@ typedef struct movieinfolist{
 typedef struct screeninginfo{
 	char movie[MOVIE_NAME_LEN + 1];
 	char day;
+	char month;
 	char slot;
+	char sala;
 } ScreeningInfo;
 
 
 typedef struct screeningid{
 	char id[MAX_ID_LEN];
 	char day;
+	char month;
 	char slot;
 	char sala;
 } ScreeningData;

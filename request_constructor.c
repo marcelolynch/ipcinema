@@ -56,8 +56,11 @@ ClientRequest* req_screening_add(char* buf){
 	ScreeningInfo* info = (ScreeningInfo*)req->data;
 
 	info->day = buf[1];
-	info->slot = buf[2];
-	safe_strncpy(info->movie, &buf[3], MOVIE_NAME_LEN);
+	info->month = buf[2];
+	info->slot = buf[3];
+	info->sala = buf[4];
+
+	safe_strncpy(info->movie, &buf[5], MOVIE_NAME_LEN);
 
 	return req;
 }
@@ -70,7 +73,9 @@ ClientRequest* req_screening_delete(char* buf){
 	ScreeningInfo* info = (ScreeningInfo*)req->data;
 
 	info->day = buf[1];
-	info->slot = buf[2];
+	info->month = buf[2];
+	info->slot = buf[3];
+
 	return req;
 }
 
