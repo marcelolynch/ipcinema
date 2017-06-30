@@ -32,4 +32,4 @@ SET estado='Cancelado' WHERE %s"
 VALUES ('%s', ;"
 
 
-#define QUERY_LEN_OVERHEAD 100
+#define QUERY_LEN_OVERHEAD 200

@@ -131,7 +131,7 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 	
 		buf[0] = TRANSACTION_ITEM;
 		buf[1] = screenings->data.day;
-		buf[2] = screenings->data.slot;
+		buf[2] = screenings->data.month;
 		
 		buf[3] = screenings->data.slot;
 		buf[4] = screenings->data.sala;
