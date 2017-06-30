@@ -1,7 +1,7 @@
 /*Agregar Pelicula al listado*/
 #define STMNT_ADD_MOVIE "INSERT INTO Pelicula(nombre, descripcion) VALUES ('%s', '%s');"
 
-#define STMNT_ADD_SCREENING "INSERT INTO Proyeccion(nombrePelicula, dia, slot, sala) VALUES ('%s', %d, %d, %d);"
+#define STMNT_ADD_SCREENING "INSERT INTO Proyeccion(nombrePelicula, dia, mes, slot, sala) VALUES ('%s', %d, %d, %d, %d);"
 
 #define STMNT_DELETE_SCREENING "DELETE FROM Proyeccion WHERE dia = %d AND slot = %d AND sala = %d;"
 

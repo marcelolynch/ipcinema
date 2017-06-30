@@ -89,11 +89,6 @@ ClientRequest * wait_request(ClientSession cli){
 		pthread_exit(NULL);
 	}
 
-	char str[100];
-	sprintf(str, "Received request: %d bytes", rd);
-
-	srv_log("Received request");
-
 	switch(buf[0]){
 		case MOVIE_ADD: 		return req_movie_add(buf);
 		case MOVIE_DELETE: 		return req_movie_delete(buf);

@@ -5,6 +5,7 @@
 #include "server_logging.h"
 #include "server_marshalling.h"
 #include "utilities.h"
+#include "synchronization.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +17,6 @@
 #include <netinet/in.h>
 #include <netdb.h> 
 #include <pthread.h>
-#include <semaphore.h>
 
 
 #define SERVER_PORT 12345 
@@ -42,8 +42,6 @@ typedef struct ti{
 } ThreadInfo;
 
 
-pthread_mutex_t mtx;
-
 DbSession database;
 
 int main(int argc, char*argv[]){
@@ -61,7 +59,7 @@ int main(int argc, char*argv[]){
         exit(1);
     }
 
-    pthread_mutex_init(&mtx, NULL);
+    synchro_init();
 
 	while(1){
 		ClientSession cli = wait_client(server);
@@ -113,9 +111,9 @@ static void * thread_work(void* data){
         } 
         else {
 
-            pthread_mutex_lock(&mtx);
+           // pthread_mutex_lock(&mtx);
             int r = process_request(session,req); //Zona crítica
-            pthread_mutex_unlock(&mtx);
+           // pthread_mutex_unlock(&mtx);
 
             if(r > 0){
                 client_send_ok(session); 
@@ -145,26 +143,71 @@ static char* req_log_msg(char type){
 
 }
 
+
+
+static synchro_type get_synchro_type(char req_type){
+    switch(req_type){
+        case REQ_MOVIE_ADD:         return WRITER;
+        case REQ_MOVIE_DELETE:      return WRITER;
+        case REQ_SCREENING_ADD:     return WRITER;
+        case REQ_SCREENING_DELETE:  return WRITER;
+        case REQ_MAKE_RESERVATION:  return WRITER;
+        
+        case REQ_MOVIE_SCREENINGS:  return READER;
+        case REQ_SEATING_INFO:      return READER;
+        case REQ_MOVIE_LIST:        return READER;
+
+        default:                    return WRITER;  // No deberia entrar nunca, pero WRITER es mas defensivo 
+        }
+
+}
+
 static int process_request(ClientSession session, ClientRequest* req){
     
     srv_log(req_log_msg(req->type));
 
+    synchro_type r_w = get_synchro_type(req->type);
+    enter_critical(r_w);
+
+    int ret_val;
     switch(req->type){
-        case REQ_MOVIE_ADD:         return add_movie((MovieInfo*)req->data);
-        case REQ_MOVIE_DELETE:      return delete_movie((char*)req->data);
-        case REQ_SCREENING_ADD:     return add_screening((ScreeningInfo*)req->data);
-        case REQ_SCREENING_DELETE:  return delete_screening((ScreeningInfo*)req->data);
-        case REQ_MAKE_RESERVATION:  return make_reservation((ReservationInfo*)req->data);
-        case REQ_MOVIE_SCREENINGS:  return send_screenings(session, get_screenings((char*)req->data));
-        case REQ_SEATING_INFO:      return send_seating_info(session, (char*)req->data);
-        case REQ_MOVIE_LIST:        return send_movies(session, get_movies());
+        case REQ_MOVIE_ADD:         ret_val = add_movie((MovieInfo*)req->data);
+            break;
+
+        case REQ_MOVIE_DELETE:      ret_val = delete_movie((char*)req->data);
+            break;
+
+        case REQ_SCREENING_ADD:     ret_val = add_screening((ScreeningInfo*)req->data);
+            break;
+
+        case REQ_SCREENING_DELETE:  ret_val = delete_screening((ScreeningInfo*)req->data);
+            break;
+
+        case REQ_MAKE_RESERVATION:  ret_val = make_reservation((ReservationInfo*)req->data);
+            break;
+
+        case REQ_MOVIE_SCREENINGS:  ret_val = send_screenings(session, get_screenings((char*)req->data));
+            break;
+
+        case REQ_SEATING_INFO:      ret_val = send_seating_info(session, (char*)req->data);
+            break;
+        
+        case REQ_MOVIE_LIST:        ret_val = send_movies(session, get_movies());
+            break;
         
         default:                    return -1;
     }
+
+    leave_critical(r_w);
+    return ret_val;
 }
 
 
 static int add_movie(MovieInfo* info){
+    #ifdef DEBUG
+    sleep(10);
+    #endif
+
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->name) + strlen(info->description));
     sprintf(stmnt, STMNT_ADD_MOVIE, info->name, info->description);
     printf("Query: %s\n", stmnt);
@@ -185,7 +228,7 @@ static int delete_movie(char* name){
 
 static int add_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->movie));
-    sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->slot, 1);
+    sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->month, info->slot, 1);
 
     printf("Query: %s\n", stmnt);
 
@@ -234,9 +277,10 @@ static ScreeningDataList* get_screenings(char* movie){
     ScreeningDataList* list = failfast_malloc(sizeof(*list));
     
     strcpy(list->data.id, row[0]);
-    list->data.day = atoi(row[1]); 
-    list->data.slot = atoi(row[2]); 
-    list->data.sala = atoi(row[3]); 
+    p->data.day = atoi(row[1]); 
+    p->data.month = atoi(row[2]); 
+    p->data.slot = atoi(row[3]); 
+    p->data.sala = atoi(row[4]); 
  
     list->next = NULL;
 
@@ -247,8 +291,9 @@ static ScreeningDataList* get_screenings(char* movie){
         p = p->next;
         strcpy(p->data.id, row[0]);
         p->data.day = atoi(row[1]); 
-        p->data.slot = atoi(row[2]); 
-        p->data.sala = atoi(row[3]); 
+        p->data.month = atoi(row[2]); 
+        p->data.slot = atoi(row[3]); 
+        p->data.sala = atoi(row[4]); 
  
         
         p->next = NULL;
@@ -260,6 +305,9 @@ static ScreeningDataList* get_screenings(char* movie){
 
 
 static MovieInfoList* get_movies(){
+    #ifdef DEBUG
+    sleep(10);
+    #endif
     char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
     sprintf(query, QUERY_GET_MOVIE_LIST);
