@@ -3,7 +3,7 @@
 
 #define STMNT_ADD_SCREENING "INSERT INTO Proyeccion(nombrePelicula, dia, mes, slot, sala) VALUES ('%s', %d, %d, %d, %d);"
 
-#define STMNT_DELETE_SCREENING "DELETE FROM Proyeccion WHERE dia = %d AND month = %D AND slot = %d AND sala = %d;"
+#define STMNT_DELETE_SCREENING "DELETE FROM Proyeccion WHERE dia = %d AND month = %d AND slot = %d AND sala = %d;"
 
 #define STMNT_DELETE_MOVIE "DELETE FROM Pelicula WHERE nombre = '%s';"
 /*Realizar Reserva*/
