@@ -1,3 +1,8 @@
+#ifndef __cli_marsh_h
+#define __cli_marsh_h
+
+#include "utilities.h"
+
 typedef struct clientInstanceCDT* ClientInstance; 
 
 #define MOVIE_NAME_LEN 127
@@ -26,8 +31,8 @@ typedef struct screeninginfo{
 typedef struct screeningid{
 	char id[30];
 	char day;
-	char slot;
 	char month;
+	char slot;
 	char sala;
 } ScreeningData;
 
@@ -35,12 +40,12 @@ typedef struct screeningid{
 typedef struct screenings{
 	ScreeningData * list;
 	int length;
-} ScreeningsList;
+} sl;
 
 typedef struct movies{
 	MovieInfo * list;
 	int length;
-} MoviesList;
+} ml;
 
 typedef struct reservationinfo{
 	char seat;
@@ -54,11 +59,9 @@ typedef struct tckt{
 } Ticket;
 
 
-MoviesList * get_movies(ClientInstance instance);
-void destroy_movies(MoviesList* movies);
+ListADT get_movies(ClientInstance instance);
 
-ScreeningsList * get_screenings(ClientInstance instance, MovieInfo* movie);
-void destroy_screenings(ScreeningsList* screenings);
+ListADT get_screenings(ClientInstance instance, MovieInfo* movie);
 
 char * get_hall(ClientInstance instance, char* screening_id);
 
@@ -73,3 +76,5 @@ void add_screening(ClientInstance instance, ScreeningInfo* screening);
 void delete_screening(ClientInstance instance, ScreeningInfo* screening);
 
 void make_reservation(ClientInstance instance, ReservationInfo* res);
+
+#endif

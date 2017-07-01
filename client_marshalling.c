@@ -1,6 +1,7 @@
 #include "sockets.h"
 #include "client_marshalling.h"
 #include "protocol.h"
+#include "utilities.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -125,7 +126,7 @@ MovieInfo request_movie_info(ClientInstance instance, char * movie_name){
 
 
 
-ScreeningsList* get_screenings(ClientInstance instance, MovieInfo* movie){
+ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
 	clear_buffer();
 	buf[0] = MOVIE_SCREENINGS;
 	strcpy(&buf[1], movie->name);
@@ -133,36 +134,38 @@ ScreeningsList* get_screenings(ClientInstance instance, MovieInfo* movie){
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	ScreeningsList* screenings = malloc(sizeof(*screenings));
+	ListADT screenings = new_list(sizeof(ScreeningData));
 	//TODO malloc
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
 		//Algo pasó
 		printf("Screenings transaction failed: received %d\n", buf[0]);
-		screenings->length = 0;
-		return screenings;
+		destroy_list(screenings);
+		return NULL;
 	}
 
-	screenings->length = buf[1];
-	screenings->list = malloc(buf[1] * sizeof(*screenings->list));
+	int trans_length = buf[1];
+	
 
 	buf[0] = TRANSACTION_NEXT;
-	
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
 	int i = 0;
 	while(buf[0] == TRANSACTION_ITEM){
-		if(i >= screenings->length){
+		if(i >= trans_length){
 			printf("Error in length");
 			break;
 		}	
-		screenings->list[i].day = buf[1];
-		screenings->list[i].month = buf[2];
-		screenings->list[i].slot = buf[3];
-		screenings->list[i].sala = buf[4];
-		strcpy(screenings->list[i].id, &buf[5]);
 		i++;
+		
+		ScreeningData s;
+		s.day = buf[1];
+		s.month = buf[2];
+		s.slot = buf[3];
+		s.sala = buf[4];
+		strcpy(s.id, &buf[5]);
+		add_to_list(screenings, &s);
 
 		buf[0] = TRANSACTION_NEXT;
 		client_send(instance, buf);
@@ -179,38 +182,24 @@ ScreeningsList* get_screenings(ClientInstance instance, MovieInfo* movie){
 	return screenings;
 }
 
-void destroy_screenings(ScreeningsList* screenings){
-	free(screenings->list);
-	free(screenings);
-}
 
-MoviesList* get_movies(ClientInstance instance){
+ListADT get_movies(ClientInstance instance){
 	clear_buffer();
 	buf[0] = MOVIE_LIST;
 
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	MoviesList* movies = malloc(sizeof(MoviesList));
-
-	if(movies == NULL){
-		return NULL;
-	}
+	ListADT movies = new_list(sizeof(MovieInfo));
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
 		//Algo pasó
 		printf("Screenings transaction failed: received %d\n", buf[0]);
-		free(movies);
+		destroy_list(movies);
 		return NULL;
 	}
 
-	movies->length = buf[1];
-	movies->list = malloc( buf[1] * sizeof(*movies->list));
-
-	if(movies->list == NULL){
-		free(movies);
-		return NULL;
-	}
+	int trans_length = buf[1];
 
 	buf[0] = TRANSACTION_NEXT;
 	
@@ -218,20 +207,24 @@ MoviesList* get_movies(ClientInstance instance){
 	client_rcv(instance, buf);
 
 	int i = 0;
+
 	while(buf[0] == TRANSACTION_ITEM){
-		if(i >= movies->length){
+		if(i >= trans_length){
 			//TODO: Borrar esto, debug
 			printf("Error in length");
 			break;
-		}	
-		safe_strncpy(movies->list[i].name, &buf[1], MOVIE_NAME_LEN);
+		}
+		i++;
+
+		MovieInfo m;
+		safe_strncpy(m.name, &buf[1], MOVIE_NAME_LEN);
 		
 		int len = strlen(&buf[1]);
 		
-		safe_strncpy(movies->list[i].description, &buf[1 + len + 1], DESCRIPTION_LEN);
+		safe_strncpy(m.description, &buf[1 + len + 1], DESCRIPTION_LEN);
 		
-		i++;
-
+		add_to_list(movies, &m);
+		
 		buf[0] = TRANSACTION_NEXT;
 		client_send(instance, buf);
 		client_rcv(instance, buf);
@@ -249,11 +242,6 @@ MoviesList* get_movies(ClientInstance instance){
 
 
 
-
-void destroy_movies(MoviesList* movies){
-	free(movies->list);
-	free(movies);
-}
 
 
 

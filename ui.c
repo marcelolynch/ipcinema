@@ -3,6 +3,7 @@
 #include "client_marshalling.h"
 #include "errors.h"
 #include "string.h"
+#include "utilities.h"
 
 #define ADMIN 1
 #define CLIENT 2
@@ -128,20 +129,40 @@ char * getHour(int slot){
 		return ans;
 	}
 
-void showMoviesOnly(MoviesList movies){
+void showMoviesOnly(ListADT movies){
 	int i;
-	if(movies.length==0){
+	if(list_length(movies) == 0){
 		printf("There are no movies showing.\n");
 		return ;
 	}
 	printf("\n\nThese are the movies showing:\n");
-	for(i=0; i<movies.length; i++){
-		printf("%d - %s\n",i+1,movies.list[i].name );
+
+	ListIteratorADT iter = get_iterator(movies);
+	MovieInfo movie;
+
+	for(i=0; iter_has_next(iter); i++){
+		iter_get_next(iter, &movie);
+		printf("%d - %s\n",i+1, movie.name);
 	}
 }
 
-int showMovies(MoviesList movies){
-	if(movies.length==0){
+
+void showScreeningsOnly(ListADT screenings){
+	printf("These are the screenings: \n");
+	ListIteratorADT iter = get_iterator(screenings);
+	int i = 0;
+	while(iter_has_next(iter)){
+		ScreeningData s;
+		iter_get_next(iter, &s); 
+		printf("%d -%d/%d | Time: %s | Hall: %d\n",i+1, s.day, s.month, getHour(s.slot), s.sala);
+		i++;
+	}
+
+	destroy_iterator(iter);
+}
+
+int showMovies(ListADT movies){
+	if(list_length(movies) == 0){
 		printf("There are no movies showing.\n");
 		return -1;
 	}
@@ -149,7 +170,7 @@ int showMovies(MoviesList movies){
 		showMoviesOnly(movies);
 		printf("Insert number of the movie: ");
 		int ans;
-		if(scanf("%d",&ans)>0 && ans>0 && ans<=movies.length){
+		if(scanf("%d",&ans)>0 && ans>0 && ans <= list_length(movies)){
 			clearBuffer();
 			return ans-1;
 		}
@@ -284,20 +305,18 @@ int askYN(char question []){
 
 
 
-int showScreenings(ScreeningsList screenings){
-	if(screenings.length==0){
+int showScreenings(ListADT screenings){
+	if(list_length(screenings) == 0){
 		printf("There are no movies showing.\n");
 		return -1;
 	}
 	while(1){
-	int i;
-	printf("These are the screenings: \n");
-	for(i =0; i<screenings.length ; i++){
-		printf("%d -%d/%d | Time: %s |Hall:%d\n",i+1,screenings.list[i].day,screenings.list[i].month,getHour(screenings.list[i].slot),screenings.list[i].sala );
-	}
+
+	showScreeningsOnly(screenings);
+
 	printf("Select a screening: ");
 		int ans;
-		if(scanf("%d",&ans)>0 && ans>0 && ans<=screenings.length){
+		if(scanf("%d",&ans)>0 && ans>0 && ans<= list_length(screenings)){
 			clearBuffer();
 			return ans-1;
 		}
@@ -305,43 +324,61 @@ int showScreenings(ScreeningsList screenings){
 		clearBuffer();
 	}
 }
+
+
 int startReservation(ClientInstance instance, char name[]){
 		// get movies from db
 		ReservationInfo res;
-		MoviesList * movies= get_movies(instance);
-		int chosenM =showMovies(*movies);
+		ListADT movies= get_movies(instance);
+		int chosenM = showMovies(movies);
+		
 		if(chosenM == -1){
-			return -1;
-		}
-		printf("Chosen movie %d\n", chosenM );
-		ScreeningsList * screenings=get_screenings(instance, &(movies->list[chosenM]));
-		// get days for movie
-		int chosenSc =showScreenings(*screenings);
-		if(chosenSc==-1){
+			destroy_list(movies);
 			return -1;
 		}
 
+		MovieInfo chosen_movie;
+		get_from_list(movies, chosenM, &chosen_movie);
+		
+		printf("Chosen movie: %d: %s\n", chosenM, chosen_movie.name);
+
+
+		ListADT screenings = get_screenings(instance, &chosen_movie);
+		// get days for movie
+		int chosenSc = showScreenings(screenings);
+
+		if(chosenSc == -1){
+			destroy_list(movies);
+			destroy_list(screenings);
+			return -1;
+		}
+
+		ScreeningData chosen_screening;
+		get_from_list(screenings, chosenSc, &chosen_screening);
+		
+
 		// get hall from db
-		char * seats= get_hall(instance, screenings->list[chosenSc].id);
+		char * seats= get_hall(instance, chosen_screening.id);
 		//int seat;
-		char chosenSe=showSeats(seats);
+		char chosenSe = showSeats(seats);
+
 		//printf("Trying to reserve row: %d col:%d\n",row,col );
-		printf("Movie: %s\n",movies->list[chosenM].name);
-		printf("Day:%d Slot:%d Sala:%d\n",screenings->list[chosenSc].day,screenings->list[chosenSc].slot,screenings->list[chosenSc].sala );
-		printf("Row: %d Col:%d\n",(chosenSe/HALL_COLS)+1,(chosenSe%HALL_COLS)+1 );
+		printf("Movie: %s\n",chosen_movie.name);
+		printf("Day: %d Slot: %d Sala:%d\n", chosen_screening.day,chosen_screening.slot, chosen_screening.sala);
+		printf("Row: %d Col: %d\n",(chosenSe/HALL_COLS)+1,(chosenSe%HALL_COLS)+1 );
 		if(askYN("Do you want to make this reservation?")){
 			printf("Trying to reserve... \n");
 			res.seat=chosenSe;
-			strcpy(res.screening_id,screenings->list[chosenSc].id);
+			strcpy(res.screening_id, chosen_screening.id);
 			strcpy(res.client,name);
 			make_reservation(instance, &res);
-			return 0;
-			
-			
 		}else{
 			printf("The reservation was cancelled.\n");
-			return 0;
 		}
+
+		destroy_list(movies);
+		destroy_list(screenings);
+		return 0;
 }
 
 void viewReservations(char reserv[][128], int len){
@@ -413,14 +450,18 @@ int startAdministrator(ClientInstance instance){
 		}
 	}else if (option == ADD_SCREENING){
 		ScreeningInfo screening;
-		MoviesList * movies= get_movies(instance);
-		int chosenM =showMovies(*movies);
-		strcpy(screening.movie, movies->list[chosenM].name);
+		ListADT movies= get_movies(instance);
+
+		int chosenM =showMovies(movies);
+		MovieInfo chosen_movie;
+		get_from_list(movies, chosenM, &chosen_movie);
+		strcpy(screening.movie, chosen_movie.name);
+		
 		screening.month=getNum("Insert the month:",12);
 		screening.day = getNum("Insert the day of the month:",31);
 		screening.slot= getNum("Insert the slot:",MAX_SLOTS);
 		screening.sala= getNum("Insert the hall:",MAX_HALL);
-		printf("Name: %s\n",screening.movie );
+		printf("Name: %s\n",screening.movie);
 		printf("Day: %d Month: %d Slot: %d Hall:%d\n",screening.day,screening.month,screening.slot,screening.sala);
 		if(askYN("Do you want add this screening?")){
 			printf("Adding screening ...\n");
@@ -430,13 +471,15 @@ int startAdministrator(ClientInstance instance){
 		}
 		
 	}else if(option == DEL_MOVIE){
-		MoviesList * movies= get_movies(instance);
-		int chosenM =showMovies(*movies);
+		ListADT movies = get_movies(instance);
+		int chosenM =showMovies(movies);
 		
-		printf("Name: %s\n",movies->list[chosenM].name );
+		MovieInfo chosen_movie;
+		get_from_list(movies, chosenM, &chosen_movie);
+		printf("Name: %s\n", chosen_movie.name);
 		if(askYN("Do you want delete this movie?")){
 			printf("Deleting movie ...\n");
-			delete_movie(instance,movies->list[chosenM].name);
+			delete_movie(instance, chosen_movie.name);
 		}else{
 			printf("Operation cancelled\n");
 		}
@@ -457,23 +500,30 @@ int startAdministrator(ClientInstance instance){
 		}
 		
 	}else if(option == EXIT_ADMIN){
+
 		return 0;
+
 	}else if(option == SHOW_MOVIES){
-		MoviesList * movies= get_movies(instance);
-		showMoviesOnly(*movies);
-	}else if(option == SHOW_SCREENING){
-		MoviesList * movies= get_movies(instance);
-		int chosenM= showMovies(*movies);
-		ScreeningsList * screenings=get_screenings(instance, &(movies->list[chosenM]));
-		if(screenings->length==0){
+
+		ListADT movies = get_movies(instance);
+		showMoviesOnly(movies);
+
+	} else if(option == SHOW_SCREENING){
+
+		ListADT movies = get_movies(instance);
+		int chosenM = showMovies(movies);
+		MovieInfo chosen_movie;
+		get_from_list(movies, chosenM, &chosen_movie);
+		ListADT screenings = get_screenings(instance, &chosen_movie);
+		
+		if(list_length(screenings) == 0){
 			printf("There are no movies showing.\n");
-		}else{
-			int i;
-			printf("These are the screenings: \n");
-			for(i =0; i<screenings->length ; i++){
-				printf("%d -Day: %d Slot:%d Sala:%d\n",i+1,screenings->list[i].day,screenings->list[i].slot,screenings->list[i].sala );
-			}
+
+		} else {
+			showScreeningsOnly(screenings);
 		}
+
+		destroy_list(screenings);
 	}
 }
 }
