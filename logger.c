@@ -21,8 +21,10 @@ key_t key;
 
 int q_set;
 
-void parent_killed_handler(int signum){
-  fprintf(stderr, "[LOG] Server process was killed. Logging process will exit\n");
+void signal_handler(int signum){
+  if(signum == SIGHUP){
+    fprintf(stderr, "[LOG] Server process was killed. Logging process will close message queue and exit\n");
+  } 
   if(q_set){
     //Cierro la message queue
     msgctl(msqid, IPC_RMID, NULL);
@@ -33,8 +35,15 @@ void parent_killed_handler(int signum){
 
 int main(int argc, char* argv[])
 {
-    prctl(PR_SET_PDEATHSIG, SIGHUP); // Zombie control
-    signal(SIGHUP, parent_killed_handler);
+    prctl(PR_SET_PDEATHSIG, SIGHUP); // Control de orfandad: me suscribo a la muerte
+                                     // de mi padre: me mandan un SIGHUP en ese caso
+    
+    // Alguien tiene que cerrar la message queue si las cosas se ponen
+    // feas. Que sea este proceso y no el servidor: manejo estas señales.
+    // No manejo SIGTERM: si me mata el servidor debería cerrar él la MQ.
+    signal(SIGHUP, signal_handler);
+    signal(SIGINT, signal_handler);
+
 
     struct log_msg buf;
 
@@ -45,7 +54,6 @@ int main(int argc, char* argv[])
         fprintf(stderr, "[LOG] Logging process couldn't open the message queue and will exit");
         exit(1);
     }
-    return 1;
     
     q_set = 1;
 

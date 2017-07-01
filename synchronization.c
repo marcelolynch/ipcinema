@@ -92,8 +92,9 @@ void enter_critical(synchro_type type){
 	}
 	else{
 		enter_writer();
+		#ifdef DEBUG
 		printf("Enter writer\n");
-
+		#endif
 	}
 }
 

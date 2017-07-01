@@ -29,9 +29,15 @@ static int add_screening(ScreeningInfo* info);
 static int delete_screening(ScreeningInfo* info);
 static int make_reservation(ReservationInfo* info);
 static int send_seating_info(ClientSession session, char* screening_id);
+static int get_screenings(ClientSession session, char* movieId);
+static int get_movies(ClientSession session);
 
-static ScreeningDataList* get_screenings(char* movie);
-static MovieInfoList* get_movies();
+static ScreeningDataList* get_screening_list(char* movie);
+void destroy_screening_list(ScreeningDataList* list);
+
+static MovieInfoList* get_movie_list();
+void destroy_movie_list(MovieInfoList* list);
+
 
 int new_thread(ClientSession client);
 
@@ -45,7 +51,6 @@ typedef struct ti{
 DbSession database;
 
 int main(int argc, char*argv[]){
-    srand(time(0));
     if (argc != 2) fatal("Usage: server server-port-number");
 
     set_log();
@@ -65,8 +70,8 @@ int main(int argc, char*argv[]){
 		ClientSession cli = wait_client(server);
 
         if(cli != NULL){
-
           srv_log("New connection");
+          destroy_log();
 		  new_thread(cli);
        
         } else {
@@ -101,7 +106,8 @@ static void * thread_work(void* data){
 
     ThreadInfo* info = (ThreadInfo*)data;
     ClientSession session = info->session;
-
+    free(info);
+    
     while(1){
         
         ClientRequest * req = wait_request(info->session);
@@ -122,7 +128,12 @@ static void * thread_work(void* data){
                 client_send_error(session, r);
             }
         }
+        free(req->data);
+        free(req);
+
      }
+
+     
      return 0; 
 
 }
@@ -186,14 +197,14 @@ static int process_request(ClientSession session, ClientRequest* req){
         case REQ_MAKE_RESERVATION:  ret_val = make_reservation((ReservationInfo*)req->data);
             break;
 
-        case REQ_MOVIE_SCREENINGS:  ret_val = send_screenings(session, get_screenings((char*)req->data));
+        case REQ_MOVIE_SCREENINGS:  ret_val = get_screenings(session, (char*)req->data);
             break;
 
         case REQ_SEATING_INFO:      ret_val = send_seating_info(session, (char*)req->data);
             break;
         
-        case REQ_MOVIE_LIST:        ret_val = send_movies(session, get_movies());
-            break;
+        case REQ_MOVIE_LIST:       ret_val = get_movies(session);
+                break;
         
         default:                    return -1;
     }
@@ -211,7 +222,9 @@ static int add_movie(MovieInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->name) + strlen(info->description));
     sprintf(stmnt, STMNT_ADD_MOVIE, info->name, info->description);
     
-    return execute_statements(database, stmnt);
+    int r = execute_statements(database, stmnt);
+    free(stmnt);
+    return r;
 }
 
 
@@ -220,7 +233,9 @@ static int delete_movie(char* name){
     sprintf(stmnt, STMNT_DELETE_MOVIE, name);
 
 
-    return execute_statements(database, stmnt);
+    int r = execute_statements(database, stmnt);
+    free(stmnt);
+    return r;
 
 }
 
@@ -228,7 +243,10 @@ static int add_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD + strlen(info->movie));
     sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->month, info->slot, info->sala);
 
-    return execute_statements(database, stmnt);
+
+    int r = execute_statements(database, stmnt);
+    free(stmnt);
+    return r;
 }
 
 
@@ -236,24 +254,34 @@ static int delete_screening(ScreeningInfo* info){
     char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD);
     sprintf(stmnt, STMNT_DELETE_SCREENING, info->day, info->month, info->slot, info->sala);
     
-    return execute_statements(database, stmnt);
-}
-
-
-static int make_reservation(ReservationInfo* info){
-    char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
-
-    sprintf(query, STMNT_MAKE_RESERVATION, info->client, info->screening_id, info->seat);
-
-    int r = execute_statements(database, query);
-
-    free(query);
-
+    int r = execute_statements(database, stmnt);
+    free(stmnt);
     return r;
 }
 
 
-static ScreeningDataList* get_screenings(char* movie){
+static int make_reservation(ReservationInfo* info){
+    char * stmnt = failfast_malloc(QUERY_LEN_OVERHEAD);
+
+    sprintf(stmnt, STMNT_MAKE_RESERVATION, info->client, info->screening_id, info->seat);
+
+    int r = execute_statements(database, stmnt);
+    free(stmnt);
+    return r;
+}
+
+
+static int get_screenings(ClientSession session, char* movieId){
+    ScreeningDataList* s = get_screening_list(movieId);
+    
+    int ret_val = send_screenings(session, s);
+    
+    destroy_screening_list(s);
+    return ret_val;
+}
+
+
+static ScreeningDataList* get_screening_list(char* movie){
     char * query = failfast_malloc(QUERY_LEN_OVERHEAD);
 
     sprintf(query, QUERY_GET_SCREENINGS, movie);
@@ -266,7 +294,7 @@ static ScreeningDataList* get_screenings(char* movie){
     if(row == NULL){
         destroy_query_data(q);
         return NULL;
-    }
+    } 
 
     ScreeningDataList* list = failfast_malloc(sizeof(*list));
     
@@ -275,7 +303,8 @@ static ScreeningDataList* get_screenings(char* movie){
     list->data.month = atoi(row[2]); 
     list->data.slot = atoi(row[3]); 
     list->data.sala = atoi(row[4]); 
- 
+    free(row);
+
     list->next = NULL;
 
     ScreeningDataList* p = list;
@@ -291,14 +320,34 @@ static ScreeningDataList* get_screenings(char* movie){
  
         
         p->next = NULL;
+
+        free(row);
     }
 
+    free(query);
     destroy_query_data(q);
     return list;
 }
 
 
-static MovieInfoList* get_movies(){
+void destroy_screening_list(ScreeningDataList* list){
+    ScreeningDataList* l;
+    while(list != NULL){
+        l = list;
+        list = list->next;
+        free(l);
+    }
+}
+
+ 
+ static int get_movies(ClientSession session){
+    MovieInfoList* m = get_movie_list();           
+    int ret_val = send_movies(session, m);
+    destroy_movie_list(m);
+
+    return ret_val;
+}
+static MovieInfoList* get_movie_list(){
     #ifdef DEBUG
     sleep(10);
     #endif
@@ -320,6 +369,8 @@ static MovieInfoList* get_movies(){
     
     strcpy(list->info.name, row[0]);
     strcpy(list->info.description, row[1]); 
+    free(row);
+    
     list->next = NULL;
 
     MovieInfoList* p = list;
@@ -332,11 +383,24 @@ static MovieInfoList* get_movies(){
         strcpy(p->info.description, row[1]); 
         
         p->next = NULL;
+        free(row);
     }
     
+    free(query);
     destroy_query_data(q);
     return list;
 }
+
+
+void destroy_movie_list(MovieInfoList* list){
+    MovieInfoList* l;
+    while(list != NULL){
+        l = list;
+        list = list->next;
+        free(l);
+    }
+}
+
 
 
 #define MAX_SEATS 300
@@ -352,11 +416,13 @@ static int send_seating_info(ClientSession session, char* screening_id){
     char** row;
     while((row = next_row(q)) != NULL){
         seats[atoi(row[0])] = 1;
+        free(row);
     }
 
     send_seats(session, seats);
     free(query);
     free(seats);
+    destroy_query_data(q);
     return 1;
 }
 

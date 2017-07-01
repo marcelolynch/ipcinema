@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/msg.h>
-
+#include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -36,7 +36,7 @@ void set_log(){
     int pid;
     if((pid = fork()) == 0){
         execl(LOG_PROC, LOG_PROC, NULL);
-    } 
+    }
 
     logger_pid = pid;
     log_set = 1;
@@ -53,15 +53,18 @@ void srv_log(const char * fmt, ...){
     vsprintf(message.msg, fmt, args);
     va_end(args);
 
+    message.mtype = 1;
     msgsnd(msqid, &message, MAX_MSG_LEN, 0);
 
 }
 
 
 void destroy_log(){
-    kill(logger_pid, SIGTERM); // Mato a mi hjo
-    msgctl(msqid, IPC_RMID, NULL); // Cierro la MQ
-    log_set = 0;
+    if(log_set){
+        kill(logger_pid, SIGTERM); // Mato a mi hjo
+        msgctl(msqid, IPC_RMID, NULL); // Cierro la MQ
+        log_set = 0;
+    }
 }
 
 

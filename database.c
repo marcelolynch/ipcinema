@@ -84,11 +84,11 @@ DbSession db_init(){
 	DbSession session = failfast_malloc(sizeof(*session));
 
     int rc = sqlite3_open(DATABASE_FILENAME, &session->db);
+    int fk = sqlite3_exec(session->db, "PRAGMA foreign_keys = ON", NULL, NULL, NULL); // Habilito enforcement de FK
+
     
-    sqlite3_exec(session->db, "PRAGMA foreign_keys = ON", NULL, NULL, NULL);
-    
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(session->db));
+    if (rc != SQLITE_OK || fk != SQLITE_OK) {
+        fprintf(stderr, "[FATAL ERROR] Couldn't open database: %s\n", sqlite3_errmsg(session->db));
         sqlite3_close(session->db);
         free(session);
         return NULL;
@@ -211,8 +211,12 @@ void destroy_query_data(QueryData q){
     free(q->data[i]);
   }
 
+
   //Libero la matriz data (vector de vectores a strings)
   free(q->data);
+
+  //Libero el query string
+  free(q->query);
 
   //Libero el espacio para la estructura
   free(q);

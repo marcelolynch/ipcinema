@@ -127,7 +127,6 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 	receive_message(session->con, buf);
 
 	while(buf[0] == TRANSACTION_NEXT && screenings != NULL){
-		ScreeningDataList* aux;
 	
 		buf[0] = TRANSACTION_ITEM;
 		buf[1] = screenings->data.day;
@@ -139,9 +138,8 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 
 		strcpy(&buf[5], screenings->data.id);
 
-		aux = screenings;
 		screenings = screenings->next;
-		free(aux);
+
 		send_message(session->con, buf);
 		receive_message(session->con, buf);
 
@@ -181,15 +179,12 @@ int send_movies(ClientSession session, MovieInfoList* movies){
 	receive_message(session->con, buf);
 
 	while(buf[0] == TRANSACTION_NEXT && movies != NULL){
-		MovieInfoList* aux;
 	
 		buf[0] = TRANSACTION_ITEM;
 		strcpy(&buf[1], movies->info.name);
 		strcpy(&buf[1+strlen(&buf[1])+1], movies->info.description);
 
-		aux = movies;
 		movies = movies->next;
-		free(aux);
 
 		send_message(session->con, buf);
 		receive_message(session->con, buf);

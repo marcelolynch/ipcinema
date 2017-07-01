@@ -89,7 +89,7 @@ ClientRequest* req_make_reservation(char* buf){
 
 	info->screening_id = atoi(&buf[2]);
 
-	int client_name_idx = 2 + strlen(&buf[2] + 1);
+	int client_name_idx = 2 + strlen(&buf[2]) + 1;
 	
 	if(!check_packet_bound(client_name_idx)){
 		free(req);
@@ -104,7 +104,7 @@ ClientRequest* req_make_reservation(char* buf){
 ClientRequest* req_movie_info(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	req->type = REQ_MOVIE_INFO;
-	req->data = failfast_malloc(strlen(&buf[1] + 1));
+	req->data = failfast_malloc(strlen(&buf[1]) + 1);
 	strcpy((char*)req->data, &buf[1]);	
 	return req;
 }
@@ -114,7 +114,7 @@ ClientRequest* req_movie_screenings(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 
 	req->type = REQ_MOVIE_SCREENINGS;
-	req->data = failfast_malloc(strlen(&buf[1] + 1));
+	req->data = failfast_malloc(strlen(&buf[1]) + 1);
 	strcpy((char*)req->data, &buf[1]);	
 
 	return req;
@@ -125,7 +125,7 @@ ClientRequest* req_seating_info(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 
 	req->type = REQ_SEATING_INFO;
-	req->data = failfast_malloc(strlen(&buf[1] + 1));
+	req->data = failfast_malloc(strlen(&buf[1]) + 1);
 	strcpy((char*)req->data, &buf[1]);	
 	
 	return req;
@@ -135,6 +135,7 @@ ClientRequest* req_seating_info(char* buf){
 ClientRequest* req_movie_list(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 	req->type = REQ_MOVIE_LIST;
+	req->data = NULL;
 	return req;
 }
 
@@ -147,7 +148,7 @@ ClientRequest* req_reservation_list(char* buf){
 	} else {
 		req->type = REQ_CANCELLED_LIST;
 	}
-	req->data = failfast_malloc(strlen(&buf[2] + 1));
+	req->data = failfast_malloc(strlen(&buf[2]) + 1);
 
 	return req;
 }
