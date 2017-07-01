@@ -17,6 +17,8 @@ typedef struct iteratorCDT * ListIteratorADT;
 
 ListADT new_list(size_t data_size);
 void add_to_list(ListADT l, void* data);
+void get_from_list(ListADT l, int index, void * data_buf);
+
 void destroy_list(ListADT l);
 size_t list_length(ListADT l);
 

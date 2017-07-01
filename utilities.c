@@ -89,6 +89,22 @@ void add_to_list(ListADT l, void* data){
 }
 
 
+void get_from_list(ListADT l, int index, void * data_buf){
+	if(index < 0 || index >= l->length){
+		return;
+	}
+
+	Node* runner = l->first;
+	
+	while(index > 0){
+		runner = runner->next;
+		index--;
+	}
+
+	memcpy(data_buf, runner->data, l->bytes);
+}
+
+
 size_t list_length(ListADT l){
 	return l->length;
 }

@@ -224,14 +224,12 @@ MoviesList* get_movies(ClientInstance instance){
 			printf("Error in length");
 			break;
 		}	
-		strncpy(movies->list[i].name, &buf[1], MOVIE_NAME_LEN);
-		movies->list[i].name[MOVIE_NAME_LEN] = '\0'; //Strncpy no lo garantiza
-
+		safe_strncpy(movies->list[i].name, &buf[1], MOVIE_NAME_LEN);
+		
 		int len = strlen(&buf[1]);
 		
-		strncpy(movies->list[i].description, &buf[1 + len + 1], DESCRIPTION_LEN);
-		movies->list[i].name[DESCRIPTION_LEN] = '\0'; //Strncpy no lo garantiza
-
+		safe_strncpy(movies->list[i].description, &buf[1 + len + 1], DESCRIPTION_LEN);
+		
 		i++;
 
 		buf[0] = TRANSACTION_NEXT;
@@ -256,6 +254,8 @@ void destroy_movies(MoviesList* movies){
 	free(movies->list);
 	free(movies);
 }
+
+
 
 char * get_hall(ClientInstance instance, char* screening_id){
 	buf[0] = SEATING_INFO;
