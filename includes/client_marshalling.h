@@ -49,6 +49,7 @@ ListADT get_movies(ClientInstance instance);
 
 ListADT get_screenings(ClientInstance instance, MovieInfo* movie);
 
+/** El ultimo parametro indica si se estan pidiendo los cancelados (1 = cancelados, 0 = normal)*/
 ListADT get_tickets(ClientInstance instance, char* client, int req_cancelled);
 
 char * get_hall(ClientInstance instance, char* screening_id);

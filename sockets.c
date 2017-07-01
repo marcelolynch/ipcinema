@@ -72,6 +72,12 @@ int socket_bind(Address a){
     	return -2;
     }
 
+    int yes = 1;
+	if (setsockopt(a->sockfd,SOL_SOCKET,SO_REUSEADDR,&yes, sizeof(yes)) == -1) {
+   		return -3;
+	} 
+
+
     return 0;
 }
 
