@@ -110,7 +110,7 @@ static void * thread_work(void* data){
     
     while(1){
         
-        ClientRequest * req = wait_request(info->session);
+        ClientRequest * req = wait_request(session);
         if(req == NULL){
             client_send_error(session, INVALID_REQUEST);
             continue;
