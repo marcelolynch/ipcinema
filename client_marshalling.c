@@ -19,13 +19,14 @@ char buf[PACKET_LENGTH];
 
 
 ClientInstance new_client(char* srv, int portno){
-	ClientInstance instance = malloc(sizeof(struct clientInstanceCDT));
+	ClientInstance instance = failfast_malloc(sizeof(struct clientInstanceCDT));
 
 	Address server = open_socket(srv, portno); 
 	Connection con = connect_to_socket(server);
 
 	instance->connection = con;
 
+	free(server);
 	return instance;
 }
 
@@ -135,7 +136,7 @@ ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
 	client_rcv(instance, buf);
 
 	ListADT screenings = new_list(sizeof(ScreeningData));
-	//TODO malloc
+	//TODO failfast_malloc
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
 		//Algo pasó
@@ -252,7 +253,7 @@ char * get_hall(ClientInstance instance, char* screening_id){
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	char * seats = malloc(HALL_ROWS*HALL_COLS);
+	char * seats = failfast_malloc(HALL_ROWS*HALL_COLS);
 	if(buf[0] == OK){
 		int i;
 		for(i = 0; i < HALL_ROWS*HALL_COLS - 1 ; i++){

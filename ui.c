@@ -144,6 +144,8 @@ void showMoviesOnly(ListADT movies){
 		iter_get_next(iter, &movie);
 		printf("%d - %s\n",i+1, movie.name);
 	}
+
+	destroy_iterator(iter);
 }
 
 
@@ -378,6 +380,7 @@ int startReservation(ClientInstance instance, char name[]){
 
 		destroy_list(movies);
 		destroy_list(screenings);
+		free(seats);
 		return 0;
 }
 
