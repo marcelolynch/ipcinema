@@ -31,8 +31,15 @@ CREATE TABLE IF NOT EXISTS Reserva\
 cliente TEXT,\
 proyeccionID INTEGER,\
 asiento INTEGER,\
-estado  TEXT,\
 PRIMARY KEY(proyeccionID, asiento),\
+FOREIGN KEY(proyeccionID) REFERENCES Proyeccion(id) ON DELETE CASCADE ON UPDATE RESTRICT\
+);\
+\
+CREATE TABLE IF NOT EXISTS Canceladas\
+(\
+cliente TEXT,\
+proyeccionID INTEGER,\
+asiento INTEGER,\
 FOREIGN KEY(proyeccionID) REFERENCES Proyeccion(id) ON DELETE CASCADE ON UPDATE RESTRICT\
 );"
 

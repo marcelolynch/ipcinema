@@ -13,7 +13,8 @@ typedef enum {
 	REQ_SEATING_INFO,
 	REQ_MOVIE_LIST,
 	REQ_RESERVATION_LIST,
-	REQ_CANCELLED_LIST
+	REQ_CANCELLED_LIST,
+	REQ_CANCEL_RESERVATION
 } requestType;
 
 
@@ -37,10 +38,6 @@ typedef struct movieinfo{
 	char description[DESCRIPTION_LEN + 1];
 } MovieInfo;
 
-typedef struct movieinfolist{
-	MovieInfo info;
-	struct movieinfolist* next;
-} MovieInfoList;
 
 typedef struct screeninginfo{
 	char movie[MOVIE_NAME_LEN + 1];
@@ -59,10 +56,6 @@ typedef struct screeningid{
 	char sala;
 } ScreeningData;
 
-typedef struct screeninglist{
-	ScreeningData data;
-	struct screeninglist * next;
-} ScreeningDataList;	
 
 typedef struct reservationinfo{
 	char seat;

@@ -109,36 +109,32 @@ ClientRequest * wait_request(ClientSession cli){
 }
 
 
-int send_screenings(ClientSession session, ScreeningDataList* screenings){
+int send_screenings(ClientSession session, ListADT screenings){
 	char buf[PACKET_LENGTH] = {0};
-	char count = 0;
 
-	ScreeningDataList* runner = screenings;
-	
-	while(runner != NULL){
-		count++;
-		runner = runner->next;
-	}
 
 	buf[0] = TRANSACTION_BEGIN;
-	buf[1] = count;
+	buf[1] = list_length(screenings);
 	
 	send_message(session->con, buf);
 	receive_message(session->con, buf);
 
-	while(buf[0] == TRANSACTION_NEXT && screenings != NULL){
-	
+	ListIteratorADT iter = get_iterator(screenings);
+
+	while(buf[0] == TRANSACTION_NEXT && iter_has_next(iter)){
+		ScreeningData data;
+
+		iter_get_next(iter, &data);
+
 		buf[0] = TRANSACTION_ITEM;
-		buf[1] = screenings->data.day;
-		buf[2] = screenings->data.month;
+		buf[1] = data.day;
+		buf[2] = data.month;
 		
-		buf[3] = screenings->data.slot;
-		buf[4] = screenings->data.sala;
+		buf[3] = data.slot;
+		buf[4] = data.sala;
 
 
-		strcpy(&buf[5], screenings->data.id);
-
-		screenings = screenings->next;
+		strcpy(&buf[5], data.id);
 
 		send_message(session->con, buf);
 		receive_message(session->con, buf);
@@ -156,21 +152,16 @@ int send_screenings(ClientSession session, ScreeningDataList* screenings){
 		send_message(session->con, buf);
 	}
 
+	destroy_iterator(iter);
 	return 1;
 }
 
 
 //TODO: codigo repetido
-int send_movies(ClientSession session, MovieInfoList* movies){
+int send_movies(ClientSession session, ListADT movies){
 	char buf[PACKET_LENGTH] = {0};
-	char count = 0;
-
-	MovieInfoList* runner = movies;
 	
-	while(runner != NULL){
-		count++;
-		runner = runner->next;
-	}
+	char count = list_length(movies);
 
 	buf[0] = TRANSACTION_BEGIN;
 	buf[1] = count;
@@ -178,13 +169,15 @@ int send_movies(ClientSession session, MovieInfoList* movies){
 	send_message(session->con, buf);
 	receive_message(session->con, buf);
 
-	while(buf[0] == TRANSACTION_NEXT && movies != NULL){
+	ListIteratorADT iter = get_iterator(movies);
+
+	while(buf[0] == TRANSACTION_NEXT && iter_has_next(iter)){
+		MovieInfo info;
+		iter_get_next(iter, &info);
 	
 		buf[0] = TRANSACTION_ITEM;
-		strcpy(&buf[1], movies->info.name);
-		strcpy(&buf[1+strlen(&buf[1])+1], movies->info.description);
-
-		movies = movies->next;
+		strcpy(&buf[1], info.name);
+		strcpy(&buf[1+strlen(&buf[1])+1], info.description);
 
 		send_message(session->con, buf);
 		receive_message(session->con, buf);
@@ -199,6 +192,8 @@ int send_movies(ClientSession session, MovieInfoList* movies){
 		buf[0] = OK;
 		send_message(session->con, buf);
 	}
+
+	destroy_iterator(iter);
 
 	return 1;
 }

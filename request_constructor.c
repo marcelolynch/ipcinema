@@ -148,7 +148,13 @@ ClientRequest* req_reservation_list(char* buf){
 	} else {
 		req->type = REQ_CANCELLED_LIST;
 	}
+	
 	req->data = failfast_malloc(strlen(&buf[2]) + 1);
-
+	strcpy(req->data, &buf[2]);
 	return req;
+}
+
+
+ClientRequest* req_cancel_reservation(char* buf){
+	return NULL;
 }
