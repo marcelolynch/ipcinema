@@ -316,7 +316,7 @@ char * get_hall(ClientInstance instance, char* screening_id){
 	char * seats = failfast_malloc(HALL_ROWS*HALL_COLS);
 	if(buf[0] == OK){
 		int i;
-		for(i = 0; i < HALL_ROWS*HALL_COLS - 1 ; i++){
+		for(i = 0; i < HALL_ROWS*HALL_COLS; i++){
 			seats[i] = buf[1+i];
 		}
 	} else {

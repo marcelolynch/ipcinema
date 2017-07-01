@@ -131,12 +131,6 @@ char * getHour(int slot){
 
 void showMoviesOnly(ListADT movies){
 	int i;
-	if(list_length(movies) == 0){
-		printf("There are no movies showing.\n");
-		return ;
-	}
-	printf("\n\nThese are the movies showing:\n");
-
 	ListIteratorADT iter = get_iterator(movies);
 	MovieInfo movie;
 
@@ -150,7 +144,6 @@ void showMoviesOnly(ListADT movies){
 
 
 void showScreeningsOnly(ListADT screenings){
-	printf("These are the screenings: \n");
 	ListIteratorADT iter = get_iterator(screenings);
 	int i = 0;
 	while(iter_has_next(iter)){
@@ -169,6 +162,7 @@ int showMovies(ListADT movies){
 		return -1;
 	}
 	while(1){
+		printf("Here are the movies we're currently showing\n");
 		showMoviesOnly(movies);
 		printf("Insert number of the movie: ");
 		int ans;
@@ -309,7 +303,7 @@ int askYN(char question []){
 
 int showScreenings(ListADT screenings){
 	if(list_length(screenings) == 0){
-		printf("There are no movies showing.\n");
+		printf("There are no screenings for that movie.\n");
 		return -1;
 	}
 	while(1){
@@ -520,7 +514,7 @@ int startAdministrator(ClientInstance instance){
 		ListADT screenings = get_screenings(instance, &chosen_movie);
 		
 		if(list_length(screenings) == 0){
-			printf("There are no movies showing.\n");
+			printf("There are no screenigns for that movie.\n");
 
 		} else {
 			showScreeningsOnly(screenings);
