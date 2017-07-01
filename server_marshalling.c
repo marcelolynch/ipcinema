@@ -78,7 +78,7 @@ void end_session(ClientSession session){
 
 ClientRequest * wait_request(ClientSession cli){
 	//El buffer termina con un cero para protegerme
-	//Cuando hago strlen de no sobrepasarme del buffer
+	//Cuando hago strlen de no sobrepasarme
 	char buf[PACKET_LENGTH + 1] = {0};
 
 	int rd = receive_message(cli->con, buf);
@@ -95,6 +95,7 @@ ClientRequest * wait_request(ClientSession cli){
 		case SCREENING_ADD: 	return req_screening_add(buf);
 		case SCREENING_DELETE: 	return req_screening_delete(buf);
 		case MAKE_RESERVATION: 	return req_make_reservation(buf);
+		case CANCEL_RESERVATION:return req_cancel_reservation(buf);
 		case MOVIE_INFO: 		return req_movie_info(buf);
 		case MOVIE_SCREENINGS:	return req_movie_screenings(buf);
 		case SEATING_INFO:		return req_seating_info(buf);
@@ -122,7 +123,7 @@ int send_screenings(ClientSession session, ListADT screenings){
 	ListIteratorADT iter = get_iterator(screenings);
 
 	while(buf[0] == TRANSACTION_NEXT && iter_has_next(iter)){
-		ScreeningData data;
+		ScreeningInfo data;
 
 		iter_get_next(iter, &data);
 
@@ -197,6 +198,58 @@ int send_movies(ClientSession session, ListADT movies){
 
 	return 1;
 }
+
+
+
+int send_tickets(ClientSession session, ListADT tickets){
+	char buf[PACKET_LENGTH] = {0};
+	
+	char count = list_length(tickets);
+
+	buf[0] = TRANSACTION_BEGIN;
+	buf[1] = count;
+		
+	send_message(session->con, buf);
+	receive_message(session->con, buf);
+
+	ListIteratorADT iter = get_iterator(tickets);
+
+	while(buf[0] == TRANSACTION_NEXT && iter_has_next(iter)){
+		Ticket ticket;
+		iter_get_next(iter, &ticket);
+	
+		buf[0] = TRANSACTION_ITEM;
+		buf[1] = ticket.seat;
+		buf[2] = ticket.screening.day;
+		buf[3] = ticket.screening.month;
+		buf[4] = ticket.screening.slot;
+		buf[5] = ticket.screening.sala;
+		strcpy(&buf[6], ticket.screening.id);
+
+		int len = strlen(&buf[6]);
+
+		strcpy(&buf[6+len+1], ticket.screening.movie);
+
+
+		send_message(session->con, buf);
+		receive_message(session->con, buf);
+	}
+	
+	if(buf[0] == TRANSACTION_NEXT){
+		buf[0] = TRANSACTION_END;
+		send_message(session->con, buf);	
+	} else {
+		//El cliente cerro la conexion, mando acknowledgement
+		srv_log("Weird shit\n");
+		buf[0] = OK;
+		send_message(session->con, buf);
+	}
+
+	destroy_iterator(iter);
+
+	return 1;
+}
+
 
 
 int send_seats(ClientSession session, char* seats){

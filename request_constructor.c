@@ -80,9 +80,7 @@ ClientRequest* req_screening_delete(char* buf){
 }
 
 
-ClientRequest* req_make_reservation(char* buf){
-	ClientRequest * req = failfast_malloc(sizeof(*req));
-	req->type = REQ_MAKE_RESERVATION;
+static ClientRequest* fill_reservation_data(ClientRequest* req, char * buf){
 	req->data = failfast_malloc(sizeof(ReservationInfo));
 	ReservationInfo* info = (ReservationInfo*)req->data;
 	info->seat = buf[1];
@@ -97,6 +95,25 @@ ClientRequest* req_make_reservation(char* buf){
 	}
 
 	safe_strncpy(info->client, &buf[client_name_idx], CLIENT_NAME_LEN);
+	return req;
+}
+
+
+ClientRequest* req_make_reservation(char* buf){
+	ClientRequest * req = failfast_malloc(sizeof(*req));
+	req->type = REQ_MAKE_RESERVATION;
+	
+	req = fill_reservation_data(req, buf);
+
+	return req;
+}
+
+
+ClientRequest* req_cancel_reservation(char* buf){
+	ClientRequest * req = failfast_malloc(sizeof(*req));
+	req->type = REQ_CANCEL_RESERVATION;
+
+	req = fill_reservation_data(req, buf);
 	return req;
 }
 
@@ -152,9 +169,4 @@ ClientRequest* req_reservation_list(char* buf){
 	req->data = failfast_malloc(strlen(&buf[2]) + 1);
 	strcpy(req->data, &buf[2]);
 	return req;
-}
-
-
-ClientRequest* req_cancel_reservation(char* buf){
-	return NULL;
 }

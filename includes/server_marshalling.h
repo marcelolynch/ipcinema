@@ -15,6 +15,8 @@ ServerInstance server_init(int port);
 int send_screenings(ClientSession session, ListADT screenings);
 int send_movies(ClientSession session, ListADT movies);
 int send_seats(ClientSession session, char* seats);
+int send_tickets(ClientSession session, ListADT tickets);
+
 
 void client_send_error(ClientSession cli, error_t error);
 void client_send_ok(ClientSession cli);

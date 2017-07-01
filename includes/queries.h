@@ -7,13 +7,28 @@
 
 #define STMNT_DELETE_MOVIE "DELETE FROM Pelicula WHERE nombre = '%s';"
 /*Realizar Reserva*/
-#define STMNT_MAKE_RESERVATION "INSERT INTO RESERVA(cliente, proyeccionId, asiento, estado) VALUES ('%s', %d, %d, 'Reservado')"
+#define STMNT_MAKE_RESERVATION "INSERT INTO RESERVA(cliente, proyeccionId, asiento) VALUES ('%s', %d, %d)"
 
+#define STMNT_CANCEL_AND_DELETE "INSERT INTO canceladas(cliente, proyeccionId, asiento) VALUES ('%s', %d, %d); \
+DELETE FROM reserva WHERE cliente = '%s' AND proyeccionId = %d AND asiento = %d;"
+
+#define QUERY_RESERVATION_EXISTS "SELECT COUNT(*) FROM reserva WHERE cliente = '%s' AND proyeccionId = %d AND asiento = %d;"
+	
 #define QUERY_GET_SCREENINGS "SELECT id,dia,mes,slot,sala FROM Proyeccion WHERE nombrePelicula = '%s' ORDER BY mes,dia,slot,sala ASC;"
 
 #define QUERY_GET_MOVIE_LIST "SELECT nombre,descripcion FROM Pelicula;"
 
 #define QUERY_OCCUPIED_SEATS "SELECT asiento FROM reserva WHERE proyeccionID = %s"
+
+#define QUERY_GET_CANCELLED "SELECT asiento, proyeccion.id, nombrePelicula, dia, mes, slot, sala \
+FROM canceladas JOIN proyeccion ON proyeccion.id = canceladas.proyeccionID \
+WHERE cliente = '%s' \
+ORDER BY mes,dia,slot,sala ASC;"
+
+#define QUERY_GET_RESERVED "SELECT asiento, proyeccion.id, nombrePelicula, dia, mes, slot, sala \
+FROM canceladas JOIN proyeccion ON proyeccion.id = canceladas.proyeccionID \
+WHERE cliente = '%s' \
+ORDER BY mes,dia,slot,sala ASC;"
 
 /*Asientos reservados*/
 #define RESERVED "SELECT cliId , nombrePelicula , proyeccionID,asiento \
@@ -32,4 +47,4 @@ SET estado='Cancelado' WHERE %s"
 VALUES ('%s', ;"
 
 
-#define QUERY_LEN_OVERHEAD 200
+#define MAX_QUERY_LEN 600

@@ -25,6 +25,7 @@
 #define SEATING_INFO		8
 #define MOVIE_LIST			9
 #define RESERVATION_LIST	10
+#define CANCEL_RESERVATION	11
 
 
 #endif

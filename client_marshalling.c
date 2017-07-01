@@ -99,32 +99,92 @@ void delete_screening(ClientInstance instance, ScreeningInfo* screening){
 }
 
 
-void make_reservation(ClientInstance instance, ReservationInfo* res){
-	clear_buffer();
-	buf[0] = MAKE_RESERVATION;
+
+static void fill_reservation_data(char* buf, ReservationInfo* res){
 	buf[1] = res->seat;
 	strcpy(&buf[2], res->screening_id);
 	strcpy(&buf[2 + strlen(&buf[2]) +1], res->client);
+}
 
+void make_reservation(ClientInstance instance, ReservationInfo* res){
+	clear_buffer();
+	buf[0] = MAKE_RESERVATION;
+	fill_reservation_data(buf, res);
 	client_send(instance,buf);
 	wait_ack(instance);
-
 }
 
 
-MovieInfo request_movie_info(ClientInstance instance, char * movie_name){
-	clear_buffer();
-	buf[0] = MOVIE_LIST;
-	strcpy(buf+1, movie_name);
+void cancel_reservation(ClientInstance instance, ReservationInfo* res){
+	buf[0] = CANCEL_RESERVATION;
+	fill_reservation_data(buf, res);
+	client_send(instance,buf);
+	wait_ack(instance);
+}
+
+
+
+ListADT get_tickets(ClientInstance instance, char* client, int req_cancelled){
+	buf[0] = RESERVATION_LIST;
+	buf[1] = req_cancelled;
+	strcpy(&buf[2], client);
 
 	client_send(instance, buf);
+	client_rcv(instance, buf);
 
-	//Espero respuesta
+	ListADT tickets = new_list(sizeof(Ticket));
+	//TODO failfast_malloc
+
+	if(!(buf[0] == TRANSACTION_BEGIN)){
+		//Algo pasó
+		printf("Screenings transaction failed: received %d\n", buf[0]);
+		destroy_list(tickets);
+		return NULL;
+	}
+
+	int trans_length = buf[1];
+	
+
+	buf[0] = TRANSACTION_NEXT;
+	client_send(instance, buf);
+	client_rcv(instance, buf);
+
+	int i = 0;
+	while(buf[0] == TRANSACTION_ITEM){
+		if(i >= trans_length){
+			printf("Error in length");
+			break;
+		}	
+		i++;
+		
+		Ticket t;
+		t.seat = buf[1];
+		t.screening.day   = buf[2];
+		t.screening.month = buf[3];
+		t.screening.slot = buf[4];
+		t.screening.sala = buf[5];
+
+		strcpy(t.screening.id, &buf[6]);
+		int len = strlen(&buf[6]);
+		strcpy(t.screening.movie, &buf[6+len+1]);
+
+		add_to_list(tickets, &t);
+
+
+		buf[0] = TRANSACTION_NEXT;
+		client_send(instance, buf);
+		client_rcv(instance, buf);
+
+	}
+
+	if(buf[0] != TRANSACTION_END){
+		printf("Something happened in the transaction: received %d\n", buf[0]);
+	}
+
 	wait_ack(instance);
-	MovieInfo info;
-	return info;	
-}
 
+	return tickets;
+}
 
 
 ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
@@ -135,7 +195,7 @@ ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	ListADT screenings = new_list(sizeof(ScreeningData));
+	ListADT screenings = new_list(sizeof(ScreeningInfo));
 	//TODO failfast_malloc
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
@@ -160,7 +220,7 @@ ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
 		}	
 		i++;
 		
-		ScreeningData s;
+		ScreeningInfo s;
 		s.day = buf[1];
 		s.month = buf[2];
 		s.slot = buf[3];

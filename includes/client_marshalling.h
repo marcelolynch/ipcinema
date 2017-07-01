@@ -19,8 +19,10 @@ typedef struct movieinfo{
 	char description[DESCRIPTION_LEN + 1];
 } MovieInfo;
 
-typedef struct screeninginfo{
+
+typedef struct screeningid{
 	char movie[MOVIE_NAME_LEN + 1];
+	char id[30];
 	char day;
 	char month;
 	char slot;
@@ -28,30 +30,14 @@ typedef struct screeninginfo{
 } ScreeningInfo;
 
 
-typedef struct screeningid{
-	char id[30];
-	char day;
-	char month;
-	char slot;
-	char sala;
-} ScreeningData;
-
-
-typedef struct screenings{
-	ScreeningData * list;
-	int length;
-} sl;
-
-typedef struct movies{
-	MovieInfo * list;
-	int length;
-} ml;
 
 typedef struct reservationinfo{
 	char seat;
 	char screening_id[ID_LEN];
 	char client[CLIENT_NAME_LEN + 1];
 } ReservationInfo;
+
+
 
 typedef struct tckt{
 	ScreeningInfo screening;
@@ -62,6 +48,8 @@ typedef struct tckt{
 ListADT get_movies(ClientInstance instance);
 
 ListADT get_screenings(ClientInstance instance, MovieInfo* movie);
+
+ListADT get_tickets(ClientInstance instance, char* client, int req_cancelled);
 
 char * get_hall(ClientInstance instance, char* screening_id);
 
@@ -76,5 +64,7 @@ void add_screening(ClientInstance instance, ScreeningInfo* screening);
 void delete_screening(ClientInstance instance, ScreeningInfo* screening);
 
 void make_reservation(ClientInstance instance, ReservationInfo* res);
+
+void cancel_reservation(ClientInstance instance, ReservationInfo* res);
 
 #endif

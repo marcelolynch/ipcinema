@@ -12,5 +12,6 @@ ClientRequest* req_movie_screenings(char* buf);
 ClientRequest* req_seating_info(char* buf);
 ClientRequest* req_movie_list(char* buf);
 ClientRequest* req_reservation_list(char* buf);
+ClientRequest* req_cancel_reservation(char* buf);
 
 #endif

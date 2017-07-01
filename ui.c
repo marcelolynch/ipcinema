@@ -154,7 +154,7 @@ void showScreeningsOnly(ListADT screenings){
 	ListIteratorADT iter = get_iterator(screenings);
 	int i = 0;
 	while(iter_has_next(iter)){
-		ScreeningData s;
+		ScreeningInfo s;
 		iter_get_next(iter, &s); 
 		printf("%d -%d/%d | Time: %s | Hall: %d\n",i+1, s.day, s.month, getHour(s.slot), s.sala);
 		i++;
@@ -355,7 +355,7 @@ int startReservation(ClientInstance instance, char name[]){
 			return -1;
 		}
 
-		ScreeningData chosen_screening;
+		ScreeningInfo chosen_screening;
 		get_from_list(screenings, chosenSc, &chosen_screening);
 		
 

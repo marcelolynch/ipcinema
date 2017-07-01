@@ -38,9 +38,9 @@ typedef struct movieinfo{
 	char description[DESCRIPTION_LEN + 1];
 } MovieInfo;
 
-
-typedef struct screeninginfo{
+typedef struct screeningid{
 	char movie[MOVIE_NAME_LEN + 1];
+	char id[MAX_ID_LEN];
 	char day;
 	char month;
 	char slot;
@@ -48,18 +48,15 @@ typedef struct screeninginfo{
 } ScreeningInfo;
 
 
-typedef struct screeningid{
-	char id[MAX_ID_LEN];
-	char day;
-	char month;
-	char slot;
-	char sala;
-} ScreeningData;
+typedef struct tckt{
+	ScreeningInfo screening;
+	int seat;
+} Ticket;
 
 
 typedef struct reservationinfo{
 	char seat;
-	char screening_id;
+	int screening_id;
 	char client[CLIENT_NAME_LEN + 1];
 } ReservationInfo;
 
@@ -68,11 +65,6 @@ struct resRequestCDT{
 	char seat;
 };
 
-
-typedef struct tckt{
-	ScreeningInfo screening;
-	int seat;
-} Ticket;
 
 typedef struct resRequestCDT* ReservationRequest;
 
