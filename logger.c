@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
         fprintf(stderr, "[LOG] Logging process couldn't open the message queue and will exit");
         exit(1);
     }
+    return 1;
     
     q_set = 1;
 
