@@ -56,10 +56,14 @@ int main(int argc, char*argv[]){
 
     if(database == NULL){
         srv_log("[ERROR] Couldn't open database");
-        exit(1);
+        exit(2);
     }
 
     synchro_init();
+
+   // destroy_log();
+    sleep(5);
+    exit(2);
 
 	while(1){
 		ClientSession cli = wait_client(server);

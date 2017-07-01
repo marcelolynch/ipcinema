@@ -37,17 +37,17 @@ ServerInstance server_init(int port){
 	session->addr = open_socket(NULL, port);
 
 	if(session->addr == NULL){
-		srv_log("Socket opening failed");
+		srv_log("[ERROR] Socket opening failed");
 		srv_log("Exiting on error");
 		free(session);
-		exit(1);
+		exit(3);
 	}
 
 	if(socket_bind(session->addr) < 0){
 		srv_log("[ERROR] Socket bind failed. Can't continue");
 		srv_log("Exiting on error");
 		free(session);
-		exit(1);
+		exit(4);
 	}
 
 	return session;

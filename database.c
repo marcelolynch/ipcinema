@@ -98,14 +98,13 @@ DbSession db_init(){
 
     if (rc != SQLITE_OK ) {
         
-        srv_log("[ERRROR] Failed to create database tables.\n");
-        srv_log("[ERROR] SQL error: %s\n", session->err_msg);
+        srv_log("[FATAL ERROR] Failed to create database tables. SQL error: %s\n", session->err_msg);
         sqlite3_free(session->err_msg);
         free(session);
         return NULL;
 
     } else {
-        srv_log("Successful database setup\n");
+        srv_log("[DATABASE] Successful database setup");
     	return session;
     }
 

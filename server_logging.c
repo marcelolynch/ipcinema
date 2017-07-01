@@ -1,49 +1,64 @@
 #include "server_logging.h"
 #include "protocol.h"
+#include "utilities.h"
+#include "log.h"
 
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/msg.h>
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdarg.h>
 
-#define FIFO_PATH "/tmp/myfifo"
 #define LOG_PROC "logger.bin"
 
 void log_socket(int code, int sending);
 char* opcode_to_str(int code);
 
-void set_log()
-{
-    mkfifo(FIFO_PATH, 0666);
-  
+int log_set;
+int msqid;
+key_t key;
+
+void set_log(){
+
+    if ((key = ftok(FTOK_PATH, FTOK_CHAR)) == -1
+        || (msqid = msgget(key, 0644 | IPC_CREAT)) == -1) {
+        fprintf(stderr, "Couldn't set up log. Will continue without logging functions\n");
+        log_set = 0;
+        return;
+    } 
+
     if(fork() == 0){
         execl(LOG_PROC, LOG_PROC, NULL);
-    }
-
+    } 
+    
+    log_set = 1;
 }
 
 void srv_log(const char * fmt, ...){
+    if(!log_set){
+        return;
+    }
+    struct log_msg message;
 
     va_list args;
     va_start(args, fmt);
-    vprintf(fmt, args);
+    vsprintf(message.msg, fmt, args);
     va_end(args);
-    printf("\n");
 
-    fflush(stdout);
+    msgsnd(msqid, &message, MAX_MSG_LEN, 0);
 
-   /*int fd = open(FIFO_PATH, O_WRONLY);
-    write(fd, msg, strlen(msg)+1);
-    close(fd);
-*/
 }
 
 
 void destroy_log(){
-	unlink(FIFO_PATH);
+
+    msgctl(msqid, IPC_RMID, NULL);
+    log_set = 0;
+
 }
 
 
