@@ -61,10 +61,6 @@ int main(int argc, char*argv[]){
 
     synchro_init();
 
-   // destroy_log();
-    sleep(5);
-    exit(2);
-
 	while(1){
 		ClientSession cli = wait_client(server);
 

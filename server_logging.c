@@ -22,6 +22,8 @@ int log_set;
 int msqid;
 key_t key;
 
+int logger_pid;
+
 void set_log(){
 
     if ((key = ftok(FTOK_PATH, FTOK_CHAR)) == -1
@@ -31,10 +33,12 @@ void set_log(){
         return;
     } 
 
-    if(fork() == 0){
+    int pid;
+    if((pid = fork()) == 0){
         execl(LOG_PROC, LOG_PROC, NULL);
     } 
-    
+
+    logger_pid = pid;
     log_set = 1;
 }
 
@@ -55,10 +59,9 @@ void srv_log(const char * fmt, ...){
 
 
 void destroy_log(){
-
-    msgctl(msqid, IPC_RMID, NULL);
+    kill(logger_pid, SIGTERM); // Mato a mi hjo
+    msgctl(msqid, IPC_RMID, NULL); // Cierro la MQ
     log_set = 0;
-
 }
 
 
