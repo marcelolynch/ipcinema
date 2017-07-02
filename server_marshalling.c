@@ -96,7 +96,6 @@ ClientRequest * wait_request(ClientSession cli){
 		case SCREENING_DELETE: 	return req_screening_delete(buf);
 		case MAKE_RESERVATION: 	return req_make_reservation(buf);
 		case CANCEL_RESERVATION:return req_cancel_reservation(buf);
-		case MOVIE_INFO: 		return req_movie_info(buf);
 		case MOVIE_SCREENINGS:	return req_movie_screenings(buf);
 		case SEATING_INFO:		return req_seating_info(buf);
 		case MOVIE_LIST:		return req_movie_list(buf);
@@ -146,10 +145,8 @@ int send_screenings(ClientSession session, ListADT screenings){
 		buf[0] = TRANSACTION_END;
 		send_message(session->con, buf);	
 	} else {
-		//El cliente cerro la conexion, mando acknowledgement
-		srv_log("Weird shit\n");
+		//El cliente cancelo la transacción, mando acknowledgement
 		buf[0] = OK;
-
 		send_message(session->con, buf);
 	}
 
@@ -240,7 +237,6 @@ int send_tickets(ClientSession session, ListADT tickets){
 		send_message(session->con, buf);	
 	} else {
 		//El cliente cerro la conexion, mando acknowledgement
-		srv_log("Weird shit\n");
 		buf[0] = OK;
 		send_message(session->con, buf);
 	}
@@ -262,9 +258,9 @@ int send_seats(ClientSession session, char* seats){
 
 static char get_error_code(error_t error){
 	switch(error){
-		case INVALID_REQUEST: return ERR_INVALID_PACKET;
-		
-		default: return ERR_UNKNOWN;	
+		case INVALID_REQUEST: 		return ERR_INVALID_PACKET;			break;
+		case CONSTRAINT_VIOLATION: 	return ERR_CONSTRAINT_VIOLATION;	break;
+		default: 					return ERR_UNKNOWN;					break;
 	}
 }
 

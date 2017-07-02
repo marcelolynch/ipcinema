@@ -147,17 +147,18 @@ int execute_statements(DbSession session, char* statements){
 	int rc = sqlite3_exec(session->db, statements, NULL, NULL, &session->err_msg);
 
     if (rc != SQLITE_OK ) {
-      srv_log(session->err_msg);
 		  if(rc == SQLITE_CONSTRAINT){
+        srv_log("[DATABASE] CONSTRAINT ERORR: %s\n", session->err_msg);
         return DB_ERR_CONSTRAINT;
       } else {
+        srv_log("[DATABASE] ERORR: %s\n", session->err_msg);
         return DB_ERR_OTHER;
       }
 
     }
   
     srv_log("[DATABASE] Succesful query");
-    return 1;
+    return 0;
 
 }
 

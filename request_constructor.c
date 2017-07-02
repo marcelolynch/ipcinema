@@ -118,15 +118,6 @@ ClientRequest* req_cancel_reservation(char* buf){
 }
 
 
-ClientRequest* req_movie_info(char* buf){
-	ClientRequest * req = failfast_malloc(sizeof(*req));
-	req->type = REQ_MOVIE_INFO;
-	req->data = failfast_malloc(strlen(&buf[1]) + 1);
-	strcpy((char*)req->data, &buf[1]);	
-	return req;
-}
-
-
 ClientRequest* req_movie_screenings(char* buf){
 	ClientRequest * req = failfast_malloc(sizeof(*req));
 
@@ -170,3 +161,15 @@ ClientRequest* req_reservation_list(char* buf){
 	strcpy(req->data, &buf[2]);
 	return req;
 }
+
+
+/* Deprecated
+
+ClientRequest* req_movie_info(char* buf){
+	ClientRequest * req = failfast_malloc(sizeof(*req));
+	req->type = REQ_MOVIE_INFO;
+	req->data = failfast_malloc(strlen(&buf[1]) + 1);
+	strcpy((char*)req->data, &buf[1]);	
+	return req;
+}
+*/

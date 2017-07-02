@@ -91,7 +91,6 @@ char* opcode_to_str(int code){
         case SCREENING_ADD: return "SCREENING_ADD";
         case SCREENING_DELETE: return "SCREENING_DELETE";
         case SCREENING_INFO: return "SCREENING_INFO";
-        case MOVIE_INFO: return "MOVIE_INFO";
         case MAKE_RESERVATION: return "MAKE_RESERVATION";
         case MOVIE_SCREENINGS: return "MOVIE_SCREENINGS";
         default: return "";

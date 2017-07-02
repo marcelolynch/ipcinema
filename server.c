@@ -22,20 +22,20 @@
 #define SERVER_PORT 12345 
 
 static void * thread_work(void* data);
-static int process_request(ClientSession session, ClientRequest* req);
+static void process_request(ClientSession session, ClientRequest* req);
 
 
-static int add_movie(MovieInfo* info);
-static int delete_movie(char* name);
-static int add_screening(ScreeningInfo* info);
-static int delete_screening(ScreeningInfo* info);
-static int make_reservation(ReservationInfo* info);
-static int cancel_reservation(ReservationInfo* info);
+static void add_movie(ClientSession session, MovieInfo* info);
+static void delete_movie(ClientSession session, char* name);
+static void add_screening(ClientSession session, ScreeningInfo* info);
+static void delete_screening(ClientSession session, ScreeningInfo* info);
+static void make_reservation(ClientSession session, ReservationInfo* info);
+static void cancel_reservation(ClientSession session, ReservationInfo* info);
 
-static int send_seating_info(ClientSession session, char* screening_id);
-static int get_screenings(ClientSession session, char* movieId);
-static int get_movies(ClientSession session);
-static int get_reservations(ClientSession session, char * client, int cancelled);
+static void send_seating_info(ClientSession session, char* screening_id);
+static void get_screenings(ClientSession session, char* movieId);
+static void get_movies(ClientSession session);
+static void get_reservations(ClientSession session, char * client, int cancelled);
 
 static ListADT get_ticket_list(char* client, int cancelled);
 static ListADT get_screening_list(char* movie);
@@ -111,28 +111,10 @@ static void * thread_work(void* data){
     free(info);
     
     while(1){
-        
+
         ClientRequest * req = wait_request(session);
-        if(req == NULL){
-            client_send_error(session, INVALID_REQUEST);
-            continue;
-        } 
-        else {
-
-           // pthread_mutex_lock(&mtx);
-            int r = process_request(session,req); //Zona crítica
-           // pthread_mutex_unlock(&mtx);
-
-            if(r > 0){
-                client_send_ok(session); 
-            }
-            else{
-                client_send_error(session, r);
-            }
-        }
-        free(req->data);
+        process_request(session,req);
         free(req);
-
      }
 
      
@@ -180,60 +162,78 @@ static synchro_type get_synchro_type(char req_type){
 
 }
 
-static int process_request(ClientSession session, ClientRequest* req){
+static void process_request(ClientSession session, ClientRequest* req){
+
+    if(req == NULL){
+      srv_log("[WARNING] Invalid client request. Ignoring...");
+      client_send_error(session, INVALID_REQUEST);
+    }
+
     
     srv_log("[CLIENT REQUEST] %s", req_log_msg(req->type));
 
     synchro_type r_w = get_synchro_type(req->type);
     enter_critical(r_w);
 
-    int ret_val;
     switch(req->type){
-        case REQ_MOVIE_ADD:         ret_val = add_movie((MovieInfo*)req->data);
+        case REQ_MOVIE_ADD:         add_movie(session, (MovieInfo*)req->data);
                                     break;
 
-        case REQ_MOVIE_DELETE:      ret_val = delete_movie((char*)req->data);
+        case REQ_MOVIE_DELETE:      delete_movie(session, (char*)req->data);
                                     break;
 
-        case REQ_SCREENING_ADD:     ret_val = add_screening((ScreeningInfo*)req->data);
+        case REQ_SCREENING_ADD:     add_screening(session, (ScreeningInfo*)req->data);
                                     break;
 
-        case REQ_SCREENING_DELETE:  ret_val = delete_screening((ScreeningInfo*)req->data);
+        case REQ_SCREENING_DELETE:  delete_screening(session, (ScreeningInfo*)req->data);
                                     break;
 
-        case REQ_MAKE_RESERVATION:  ret_val = make_reservation((ReservationInfo*)req->data);
+        case REQ_MAKE_RESERVATION:  make_reservation(session, (ReservationInfo*)req->data);
                                     break;
 
-        case REQ_CANCEL_RESERVATION: ret_val = cancel_reservation((ReservationInfo*)req->data);
+        case REQ_CANCEL_RESERVATION: cancel_reservation(session, (ReservationInfo*)req->data);
                                     break;
 
-        //Requests con respuesta 
-
-        case REQ_MOVIE_SCREENINGS:  ret_val = get_screenings(session, (char*)req->data);
+        case REQ_MOVIE_SCREENINGS:  get_screenings(session, (char*)req->data);
                                     break;
 
-        case REQ_SEATING_INFO:      ret_val = send_seating_info(session, (char*)req->data);
+        case REQ_SEATING_INFO:      send_seating_info(session, (char*)req->data);
                                     break;
         
-        case REQ_MOVIE_LIST:        ret_val = get_movies(session);
+        case REQ_MOVIE_LIST:        get_movies(session);
                                     break;
 
         
-        case REQ_RESERVATION_LIST:  ret_val = get_reservations(session, (char*)req->data, 0);
+        case REQ_RESERVATION_LIST:  get_reservations(session, (char*)req->data, 0);
                                     break;
                                     
-        case REQ_CANCELLED_LIST:    ret_val = get_reservations(session, (char*)req->data, 1);
+        case REQ_CANCELLED_LIST:    get_reservations(session, (char*)req->data, 1);
                                     break;    
-        
-        default:                    ret_val = -1;
     }
 
     leave_critical(r_w);
-    return ret_val;
+
+    free(req->data);
 }
 
 
-static int add_movie(MovieInfo* info){
+static void do_stmnt_and_ack(ClientSession session, char* stmnt){
+    int r = execute_statements(database, stmnt);
+    if(r < 0){ // Error desde la base de datos
+        error_t err;
+        switch(r){
+            case DB_ERR_CONSTRAINT: err = CONSTRAINT_VIOLATION; break;
+            case DB_ERR_OTHER:      err = UNKNOWN_DB_ERROR;     break;
+            default:                err = OTHER;                break;
+        } 
+        client_send_error(session, err);
+    } else{
+        client_send_ok(session);
+    }
+
+}
+
+static void add_movie(ClientSession session, MovieInfo* info){
     #ifdef DEBUG
     sleep(10);
     #endif
@@ -241,56 +241,52 @@ static int add_movie(MovieInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN + strlen(info->name) + strlen(info->description));
     sprintf(stmnt, STMNT_ADD_MOVIE, info->name, info->description);
     
-    int r = execute_statements(database, stmnt);
+    do_stmnt_and_ack(session, stmnt);
+    
     free(stmnt);
-    return r;
 }
 
 
-static int delete_movie(char* name){
+static void delete_movie(ClientSession session, char* name){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN + strlen(name));
     sprintf(stmnt, STMNT_DELETE_MOVIE, name);
 
 
-    int r = execute_statements(database, stmnt);
+    do_stmnt_and_ack(session, stmnt);
     free(stmnt);
-    return r;
-
 }
 
-static int add_screening(ScreeningInfo* info){
+static void add_screening(ClientSession session, ScreeningInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN + strlen(info->movie));
+
     sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->month, info->slot, info->sala);
 
 
-    int r = execute_statements(database, stmnt);
+    do_stmnt_and_ack(session, stmnt);
     free(stmnt);
-    return r;
 }
 
 
-static int delete_screening(ScreeningInfo* info){
+static void delete_screening(ClientSession session, ScreeningInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN);
     sprintf(stmnt, STMNT_DELETE_SCREENING, info->day, info->month, info->slot, info->sala);
     
-    int r = execute_statements(database, stmnt);
+    do_stmnt_and_ack(session, stmnt);
     free(stmnt);
-    return r;
 }
 
 
-static int make_reservation(ReservationInfo* info){
+static void make_reservation(ClientSession session, ReservationInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN);
 
     sprintf(stmnt, STMNT_MAKE_RESERVATION, info->client, info->screening_id, info->seat);
 
-    int r = execute_statements(database, stmnt);
+    do_stmnt_and_ack(session, stmnt);
     free(stmnt);
-    return r;
 }
 
 
-static int cancel_reservation(ReservationInfo* info){
+static void cancel_reservation(ClientSession session, ReservationInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN);
     
     char * client = info->client;
@@ -305,7 +301,7 @@ static int cancel_reservation(ReservationInfo* info){
 
     if(atoi(row[0]) == 0){ // No existe esa reserva
         free(row);
-        return -1; //TODO: Errcodes
+        return; //TODO: Errcodes
     }
 
     destroy_query_data(q);
@@ -313,26 +309,22 @@ static int cancel_reservation(ReservationInfo* info){
 
     sprintf(stmnt, STMNT_CANCEL_AND_DELETE, client, screening_id, seat, 
                                             client, screening_id, seat);
-    int r = execute_statements(database, stmnt);
-
+    
+    do_stmnt_and_ack(session, stmnt);
     free(stmnt);
-    return r;
 
 }
 
 
-static int get_screenings(ClientSession session, char* movieId){
+static void get_screenings(ClientSession session, char* movieId){    
     ListADT s = get_screening_list(movieId);
-    
-    int ret_val = send_screenings(session, s);
-    
+    send_screenings(session, s);
     destroy_list(s);
-
-    return ret_val;
 }
 
 
 static ListADT get_screening_list(char* movie){
+ 
     char * query = failfast_malloc(MAX_QUERY_LEN);
 
     sprintf(query, QUERY_GET_SCREENINGS, movie);
@@ -364,14 +356,10 @@ static ListADT get_screening_list(char* movie){
 
 
 
-
-
-static int get_movies(ClientSession session){
+static void get_movies(ClientSession session){
     ListADT m = get_movie_list();           
-    int ret_val = send_movies(session, m);
+    send_movies(session, m);
     destroy_list(m);
-
-    return ret_val;
 }
 
 
@@ -409,11 +397,10 @@ static ListADT get_movie_list(){
 
 
 
-static int get_reservations(ClientSession session, char * client, int cancelled){
+static void get_reservations(ClientSession session, char * client, int cancelled){
     ListADT t = get_ticket_list(client, cancelled);
-    int ret_val = send_tickets(session, t);
+    send_tickets(session, t);
     destroy_list(t);
-    return ret_val;
 }
 
 
@@ -454,7 +441,7 @@ static ListADT get_ticket_list(char* client, int cancelled){
 
 #define MAX_SEATS 300
 
-static int send_seating_info(ClientSession session, char* screening_id){
+static void send_seating_info(ClientSession session, char* screening_id){
     char * query = failfast_malloc(MAX_QUERY_LEN);
 
     sprintf(query, QUERY_OCCUPIED_SEATS, screening_id);
@@ -463,6 +450,7 @@ static int send_seating_info(ClientSession session, char* screening_id){
 
     char* seats = failfast_calloc(MAX_SEATS,1);
     char** row;
+
     while((row = next_row(q)) != NULL){
         seats[atoi(row[0])] = 1;
         free(row);
@@ -472,7 +460,6 @@ static int send_seating_info(ClientSession session, char* screening_id){
     free(query);
     free(seats);
     destroy_query_data(q);
-    return 1;
 }
 
 

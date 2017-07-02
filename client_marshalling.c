@@ -34,12 +34,21 @@ static void clear_buffer(){
 	memset(buf, 0, PACKET_LENGTH);
 }
 
+static char* error_name(char code){
+	switch(code){
+		case ERR_NO_SUCH_DATA:		return "asked for non-existent data"; break;
+		case ERR_INVALID_PACKET: 	return "protocol violation"; break;
+		case ERR_CONSTRAINT_VIOLATION: return "DB constraint violation"; break;
+		case ERR_UNKNOWN: 			
+		default:					return "unknown"; break;
+	}
+}
 
 static void wait_ack(ClientInstance instance){
 	client_rcv(instance, buf);
 	printf("Server replies: ");
 	if(buf[0] == ERROR){
-		printf("Error\n");
+		printf("Error %s\n", error_name(buf[1]));
 	} else if(buf[0] == OK){
 		printf("Ok\n");
 	} else {
@@ -133,30 +142,18 @@ ListADT get_tickets(ClientInstance instance, char* client, int req_cancelled){
 	client_rcv(instance, buf);
 
 	ListADT tickets = new_list(sizeof(Ticket));
-	//TODO failfast_malloc
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
 		//Algo pasó
-		printf("Screenings transaction failed: received %d\n", buf[0]);
-		destroy_list(tickets);
-		return NULL;
+		fprintf(stderr, "[WARNING] transaction failed. Returning empty list\n");
+		return tickets;
 	}
-
-	int trans_length = buf[1];
-	
 
 	buf[0] = TRANSACTION_NEXT;
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	int i = 0;
 	while(buf[0] == TRANSACTION_ITEM){
-		if(i >= trans_length){
-			printf("Error in length");
-			break;
-		}	
-		i++;
-		
 		Ticket t;
 		t.seat = buf[1];
 		t.screening.day   = buf[2];
@@ -178,10 +175,8 @@ ListADT get_tickets(ClientInstance instance, char* client, int req_cancelled){
 	}
 
 	if(buf[0] != TRANSACTION_END){
-		printf("Something happened in the transaction: received %d\n", buf[0]);
+		fprintf(stderr, "[WARNING] Transaction didn't end gracefully: Code %d\n", buf[0]);
 	}
-
-	wait_ack(instance);
 
 	return tickets;
 }
@@ -196,29 +191,18 @@ ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
 	client_rcv(instance, buf);
 
 	ListADT screenings = new_list(sizeof(ScreeningInfo));
-	//TODO failfast_malloc
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
 		//Algo pasó
-		printf("Screenings transaction failed: received %d\n", buf[0]);
-		destroy_list(screenings);
-		return NULL;
+		fprintf(stderr, "[WARNING] transaction failed. Returning empty list\n");
+		return screenings;
 	}
-
-	int trans_length = buf[1];
-	
 
 	buf[0] = TRANSACTION_NEXT;
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	int i = 0;
 	while(buf[0] == TRANSACTION_ITEM){
-		if(i >= trans_length){
-			printf("Error in length");
-			break;
-		}	
-		i++;
 		
 		ScreeningInfo s;
 		s.day = buf[1];
@@ -235,10 +219,9 @@ ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
 	}
 
 	if(buf[0] != TRANSACTION_END){
-		printf("Something happened in the transaction: received %d\n", buf[0]);
+		fprintf(stderr, "[WARNING] Transaction didn't end gracefully: Code %d\n", buf[0]);
 	}
 
-	wait_ack(instance);
 
 	return screenings;
 }
@@ -255,28 +238,16 @@ ListADT get_movies(ClientInstance instance){
 
 	if(!(buf[0] == TRANSACTION_BEGIN)){
 		//Algo pasó
-		printf("Screenings transaction failed: received %d\n", buf[0]);
-		destroy_list(movies);
-		return NULL;
+		fprintf(stderr, "[WARNING] transaction failed. Returning empty list\n");
+		return movies;
 	}
-
-	int trans_length = buf[1];
 
 	buf[0] = TRANSACTION_NEXT;
 	
 	client_send(instance, buf);
 	client_rcv(instance, buf);
 
-	int i = 0;
-
 	while(buf[0] == TRANSACTION_ITEM){
-		if(i >= trans_length){
-			//TODO: Borrar esto, debug
-			printf("Error in length");
-			break;
-		}
-		i++;
-
 		MovieInfo m;
 		safe_strncpy(m.name, &buf[1], MOVIE_NAME_LEN);
 		
@@ -293,10 +264,8 @@ ListADT get_movies(ClientInstance instance){
 	}
 
 	if(buf[0] != TRANSACTION_END){
-		printf("Something happened in the transaction: received %d\n", buf[0]);
+		fprintf(stderr, "[WARNING] Transaction didn't end gracefully: Code %d\n", buf[0]);
 	}
-
-	wait_ack(instance);
 
 	return movies;
 }
@@ -320,11 +289,9 @@ char * get_hall(ClientInstance instance, char* screening_id){
 			seats[i] = buf[1+i];
 		}
 	} else {
-		//TODO: Error
 		return NULL;
 	}
 
-	wait_ack(instance);
 	return seats;
 }
 
