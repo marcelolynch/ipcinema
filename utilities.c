@@ -91,7 +91,8 @@ void add_to_list(ListADT l, void* data){
 
 void get_from_list(ListADT l, int index, void * data_buf){
 	if(index < 0 || index >= l->length){
-		return;
+		fprintf(stderr, "Fatal: list index out of bounds\n");
+		exit(12);	
 	}
 
 	Node* runner = l->first;
@@ -138,7 +139,8 @@ int iter_has_next(ListIteratorADT iter){
 
 void iter_get_next(ListIteratorADT iter, void * data_buf){
 	if(!iter_has_next(iter)){
-		return;
+		fprintf(stderr, "Fatal: requesting from depleted iterator\n");
+		exit(13);
 	}
 	memcpy(data_buf, iter->ptr->data, iter->bytes);
 	iter->ptr = iter->ptr->next;
