@@ -1,12 +1,10 @@
 #include "sqlite3.h"
-#include "callback.h"
 #include "db.h"
 #include "utilities.h"
 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "callback.h"
 #include "server_logging.h"
 
 #define TABLES_CREATE "CREATE TABLE IF NOT EXISTS Pelicula(\
