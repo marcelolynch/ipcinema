@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "utilities.h"
 
+
 char * safe_strncpy(char * destination, char * source, size_t n){
 	strncpy(destination, source, n);
 	destination[n] = '\0';

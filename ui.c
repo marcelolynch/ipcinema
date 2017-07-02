@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include "client_marshalling.h"
-#include "errors.h"
-#include "string.h"
 #include "utilities.h"
 
 #define ADMIN 1

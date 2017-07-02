@@ -1,4 +1,3 @@
-#include "errors.h"
 #include "db.h"
 #include "queries.h"
 #include "server.h"
@@ -54,7 +53,10 @@ typedef struct ti{
 DbSession database;
 
 int main(int argc, char*argv[]){
-    if (argc != 2) fatal("Usage: server server-port-number");
+    if (argc != 2){
+        printf("Usage: server server-port-number");
+        exit(1);
+    }
 
     set_log();
 

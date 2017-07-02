@@ -3,7 +3,7 @@ CFLAGS = -Wall -g -I $(INCLUDE_DIR)
 DEBUGFLAG = -D DEBUG
 
 INCLUDE_DIR = ./includes
-COMMON_SOURCES = sockets.c errors.c utilities.c
+COMMON_SOURCES = sockets.c utilities.c
 SERVER_SOURCES = server.c server_marshalling.c server_logging.c request_builder.c synchronization.c database.c sqlite3.c
 SERVER_FLAGS = -pthread -ldl
 CLIENT_SOURCES = client.c ui.c client_marshalling.c 

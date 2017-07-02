@@ -1,13 +1,10 @@
 #include "server.h"
 #include "sockets.h"
-#include "errors.h"
 #include "server_marshalling.h"
 #include "server_logging.h"
 #include "protocol.h"
 #include "request_builder.h"
 #include "utilities.h"
-
-
 
 #include <pthread.h>
 
