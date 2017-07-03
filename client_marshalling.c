@@ -65,6 +65,8 @@ static void wait_ack(ClientInstance instance){
 	fflush(stdout);
 }
 
+/* Requests al servidor: el primer byte indica el tipo de request,
+	los datos se agregan sucevisamente a partir del segundo byte */
 
 /** Las siguientes requieren actualizaciones sobre la base de datos */
 

@@ -302,8 +302,8 @@ static void cancel_reservation(ClientSession session, ReservationInfo* info){
     char ** row = next_row(q);
 
     if(atoi(row[0]) == 0){ // No existe esa reserva
-        free(row);
-        return; //TODO: Errcodes
+        free(row);          // No hago nada
+        return; 
     }
 
     destroy_query_data(q);

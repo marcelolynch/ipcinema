@@ -171,6 +171,9 @@ void db_close(DbSession s){
 // Lo que sigue son funciones correspondientes al TAD de QueryData
 static int increase_capacity(QueryData q);
 
+
+/*Callback de SQLite3: cada llamada agrega una fila al objeto 
+  QueryData que llega via el primer parametro */
 static int callback(void *res, int nrCols, char **colElems, char **colsName){
   int i;
   QueryData q = res;
@@ -179,9 +182,9 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName){
     srv_log("Consistency error! Should never happen\n");
   }
 
-  // q->rows apunta al indice de la siguiente fila a llenar
+  // q->rows es el indice de la siguiente fila a llenar
   if(q->rows >= q->capacity - 1){
-    increase_capacity(q); //TODO: Check null
+    increase_capacity(q); 
   }
 
   // Reservo espacio para una fila mas
@@ -189,7 +192,7 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName){
 
   for (i = 0; i < nrCols ; i++){
     if(colElems[i] == NULL){
-      q->data[q->rows][i] = NULL;
+      q->data[q->rows][i] = NULL;  // TODO: strcpy "NULL"?
     } 
     else {
       q->data[q->rows][i] = failfast_malloc(strlen(colElems[i]) + 1);
@@ -202,6 +205,61 @@ static int callback(void *res, int nrCols, char **colElems, char **colsName){
 }
 
 
+QueryData new_query(char* query, int cols){
+  QueryData q = failfast_malloc(sizeof(*q));
+  if(q == NULL){
+      return q;
+  }
+
+  q->query = failfast_malloc(strlen(query) + 1);
+  strcpy(q->query, query);
+
+  q->cursor = 0;
+  q->rows = 0;
+  q->cols = cols;
+  q->data = failfast_malloc(INITIAL_CAPACITY * sizeof(char* *));
+  q->capacity = INITIAL_CAPACITY;
+
+  return q;
+}
+
+
+
+
+//Devuelve la cantidad de columnas 
+int n_cols(QueryData q){
+  return q->cols;
+}
+
+
+//Devuelve la cantidad de filas
+int n_rows(QueryData q){
+  return q->rows;
+}
+
+
+/* next_row devuelve un vector de QueryData->cols elementos con la siguiente fila que no se consulto
+  de la querydata y avanza el cursor.
+
+  Importante: se retorna un shallow copy de la fila: no hay que modificar los valores
+  ni hacer free desde afuera  */
+char ** next_row(QueryData q){
+  if(q->cursor >= q->rows){
+    return NULL;  //No existe una siguiente
+  }
+  char ** res = failfast_malloc(q->cols*sizeof(char*)); 
+  int i;
+  for(i = 0 ; i < q->cols ; i++){
+    res[i] = q->data[q->cursor][i];
+  }
+
+  q->cursor++;
+  return res;
+}
+
+
+
+// Libera recursos
 void destroy_query_data(QueryData q){
   if(q == NULL){
     return;
@@ -231,36 +289,9 @@ void destroy_query_data(QueryData q){
 
 
 
-QueryData new_query(char* query, int cols){
-  QueryData q = failfast_malloc(sizeof(*q));
-  if(q == NULL){
-      return q;
-  }
 
-  q->query = failfast_malloc(strlen(query) + 1);
-  strcpy(q->query, query);
-
-  q->cursor = 0;
-  q->rows = 0;
-  q->cols = cols;
-  q->data = failfast_malloc(INITIAL_CAPACITY * sizeof(char* *));
-  q->capacity = INITIAL_CAPACITY;
-
-  return q;
-}
-
-//Devuelve la cantidad de columnas 
-int n_cols(QueryData q){
-  return q->cols;
-}
-
-
-//Devuelve la cantidad de filas
-int n_rows(QueryData q){
-  return q->rows;
-}
-
-
+/* Para el callback: duplica la capacidad del vector
+  que aloja las filas */
 static int increase_capacity(QueryData q){
   if(q == NULL) return -1;
 
@@ -271,22 +302,3 @@ static int increase_capacity(QueryData q){
 
   return 1;
 }
-
-/* next_row devuelve un vector de cols elementos con la siguiente fila que no se consulto
-  de la querydata y avanza el cursor.
-  Importante: se retorna un shallow copy de la fila: no hay que modificar los valores
-  ni hacer free desde afuera  */
-char ** next_row(QueryData q){
-  if(q->cursor >= q->rows){
-    return NULL;  //No existe una siguiente
-  }
-  char ** res = failfast_malloc(q->cols*sizeof(char*)); 
-  int i;
-  for(i = 0 ; i < q->cols ; i++){
-    res[i] = q->data[q->cursor][i];
-  }
-
-  q->cursor++;
-  return res;
-}
-

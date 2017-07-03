@@ -80,7 +80,7 @@ ListADT new_list(size_t data_size){
 	ListADT l = failfast_malloc(sizeof *l);
 	l->first = NULL;
 	l->last = NULL;
-	l->length = 0;
+	l->length = 0;	// Empieza vacía
 	l->bytes = data_size;
 
 	return l;
@@ -156,8 +156,8 @@ void iter_get_next(ListIteratorADT iter, void * data_buf){
 		fprintf(stderr, "Fatal: requesting from depleted iterator\n");
 		exit(13);
 	}
-	memcpy(data_buf, iter->ptr->data, iter->bytes);
-	iter->ptr = iter->ptr->next;
+	memcpy(data_buf, iter->ptr->data, iter->bytes); 
+	iter->ptr = iter->ptr->next;	// Avanzo en la lista
 }
 
 
