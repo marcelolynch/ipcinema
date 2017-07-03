@@ -43,25 +43,38 @@ void * failfast_calloc(int num, size_t size){
 
 
 
-// Linked list: solo se puede agregar, no necesito más
+/* 
+	Definición y funciones del TAD ListADT, que implementa
+	una lista simplemente encadenada y un iterador para la lista.
+	La lista soporta inserción al final y consultar el elemento i-ésimo,
+	y su tamaño.
+*/
 typedef struct node {
+	//Nodo de la lista. data apunta al elemento
 	void * data;
 	struct node * next;
 } Node;
 
 
+
 struct listCDT{
-	Node * first;
-	Node * last;
-	size_t length;
-	size_t bytes;
+	// Header
+
+	Node * first;	// Para iterar y borrar
+	Node * last;	// Para insercion O(1)
+	size_t length;	// Tamaño O(1)
+	size_t bytes;	// Lista generica: necesito el tamaño de los datos
 };
 
 
 struct iteratorCDT {
+	// Iterador. ptr apunta al siguiente nodo cuyo valor debe ser retornado 
+
 	Node * ptr;
-	size_t bytes;
+	size_t bytes; //Tamaño del dato
 };
+
+
 
 ListADT new_list(size_t data_size){
 	ListADT l = failfast_malloc(sizeof *l);

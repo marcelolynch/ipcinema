@@ -14,6 +14,20 @@
 
 #include <string.h>
 
+/* 
+
+ Abstraigo a la capa superior de las dependencias de comunicación y del protocolo.
+ En definitiva serverinstanceCDT wrappea el listener socket y
+ clientsessionCDT el socket de cada cliente. Por como se utilizan ahora,
+ podrían devolverse Address o Connection directamente pero este diseño es más extensible.
+
+ En server_marshalling.h se definen los punteros a estas estructuras para funcionar como ADT .
+
+ Esta capa conoce el protocolo definido entre servidor y cliente y se encarga de la serialziación
+ de las respuestas y la deserialización de las requests.
+
+*/
+
 struct serverinstanceCDT {
 	Address addr;
 };
@@ -24,10 +38,8 @@ struct clientsessionCDT {
 	char status;
 };
 
-typedef struct serverinstanceCDT* ServerInstance;
-typedef struct clientsessionCDT* ClientSession;
-
-
+/* Abre el socket en el que se escucharán conexiones 
+	y hace el bind & listen */
 ServerInstance server_init(int port){
 	ServerInstance session = failfast_malloc(sizeof(struct serverinstanceCDT));
 
@@ -50,7 +62,7 @@ ServerInstance server_init(int port){
 	return session;
 } 
 
-
+ 
 ClientSession wait_client(ServerInstance srv){
 	Connection c = accept_connection(srv->addr);
 	
@@ -72,7 +84,8 @@ void end_session(ClientSession session){
 }
 
 
-
+/* Espero una request del cliente y llamo al constructor de ClientRequest que corresponda
+   para finalmente devolver ese objeto. Ver request_builder.c y server.h */
 ClientRequest * wait_request(ClientSession cli){
 	//El buffer termina con un cero para protegerme
 	//Cuando hago strlen de no sobrepasarme
@@ -86,6 +99,7 @@ ClientRequest * wait_request(ClientSession cli){
 		pthread_exit(NULL);
 	}
 
+	// El primer byte del paquete contiene el codigo de request
 	switch(buf[0]){
 		case MOVIE_ADD: 		return req_movie_add(buf);
 		case MOVIE_DELETE: 		return req_movie_delete(buf);
@@ -105,6 +119,21 @@ ClientRequest * wait_request(ClientSession cli){
 
 }
 
+/** Las funciones que siguen (send_screenings, send_movies, send_tickets)
+	Son análogas en su funcionamiento: inician una transacción
+	de paquetes con el cliente y envían en cada paquete una unidad
+	de lo requerido (screening, movie, tickets) en cada caso.
+
+	Se le envía un paquete TRANSACTION_BEGIN al cliente, junto
+	con la cantidad de datos máxima que se van a enviar. El cliente 
+	debe estar esperandolo por la request que envió. Se esperan
+	pedidos de TRANSACTION_NEXT hasta que no hay mas datos que envíar.
+	En ese momento se envía TRANSACTION_END. Si se se reciba algún
+	otro mensaje distinto de TRANSACTION_NEXT se envía un acknowledgement (OK) y se termina.
+
+	La serializacion de cada dato pedido es evidente en cada función, y como siempre
+	el byte 0 del paquete funciona como header e indica el dato que se está enviando
+ */
 
 int send_screenings(ClientSession session, ListADT screenings){
 	char buf[PACKET_LENGTH] = {0};
@@ -152,7 +181,6 @@ int send_screenings(ClientSession session, ListADT screenings){
 }
 
 
-//TODO: codigo repetido
 int send_movies(ClientSession session, ListADT movies){
 	char buf[PACKET_LENGTH] = {0};
 	
@@ -183,7 +211,6 @@ int send_movies(ClientSession session, ListADT movies){
 		send_message(session->con, buf);	
 	} else {
 		//El cliente cerro la conexion, mando acknowledgement
-		srv_log("Weird shit\n");
 		buf[0] = OK;
 		send_message(session->con, buf);
 	}
@@ -244,11 +271,12 @@ int send_tickets(ClientSession session, ListADT tickets){
 }
 
 
-
-int send_seats(ClientSession session, char* seats){
+// Envio información de los asientos. Size debe ser tal que no se
+// exceda el tamaño del paquete (< 512 bytes).
+int send_seats(ClientSession session, char* seats, int size){
 	char buf[PACKET_LENGTH];
 	buf[0] = OK;
-	memcpy(&buf[1], seats, 100);
+	memcpy(&buf[1], seats, size);
 	send_message(session->con, buf);
 	return 1;
 }
@@ -269,7 +297,7 @@ void client_send_error(ClientSession cli, error_t error){
 }
 
 
-
+/* Enviar OK, mensaje de acknowledgement */
 void client_send_ok(ClientSession cli){
 	char buf[PACKET_LENGTH] = {0};
 	buf[0] = OK;

@@ -458,7 +458,7 @@ static void send_seating_info(ClientSession session, char* screening_id){
         free(row);
     }
 
-    send_seats(session, seats);
+    send_seats(session, seats, MAX_SEATS);
     free(query);
     free(seats);
     destroy_query_data(q);
