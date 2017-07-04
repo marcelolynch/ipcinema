@@ -29,7 +29,7 @@
 int getClientType();
 void startClient();
 void startAdministrator();
-void getString(char q[],char name []);
+void getString(char q[],char name [], size_t max_len);
 
 
 int start_ui(ClientInstance instance){
@@ -44,7 +44,7 @@ while(1){
 	if(ans== CLIENT){
 		printf("----- Starting client ----- \n");
 		char name [128];
-		getString("What's your name?: ",name);
+		getString("What's your name?: ",name, CLIENT_NAME_LEN);
 		startClient(instance,name);
 	} else if (ans == ADMIN){
 		printf("----- Starting Administrator ----- \n");
@@ -57,7 +57,7 @@ while(1){
 }
 
 void clearBuffer(){
-	char c;
+	int c;
 	while ((c = getchar()) != '\n' && c != EOF);
 }
 
@@ -255,20 +255,23 @@ int showClientOptions(){
 	}
 }
 
-void getString(char q[],char name []){
+void getString(char q[],char name [], size_t max_len){
 	printf("%s",q);
-	char c;
+	int c;
 	int i=0;
-	while((c=getchar())!='\n'){
+	while((c=getchar())!='\n' && i < max_len){
 		name[i]=c;
 		i++;
+	}
+	if(c != '\n'){
+		clearBuffer();
 	}
 	name[i]=0;
 }
 
 int getMovieInfo(char name [], char description []){
-	getString("Insert movie name: ",name);
-	getString("Insert movie description: ",description);
+	getString("Insert movie name: ",name, MOVIE_NAME_LEN);
+	getString("Insert movie description: ",description, DESCRIPTION_LEN);
 	return 0;
 }
 

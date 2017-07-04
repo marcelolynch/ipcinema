@@ -18,8 +18,6 @@
 #include <pthread.h>
 
 
-#define SERVER_PORT 12345 
-
 static void * thread_work(void* data);
 static void process_request(ClientSession session, ClientRequest* req);
 
