@@ -488,7 +488,7 @@ void startClient(ClientInstance instance, char name []){
 			if(list_length(reserv) > 0){
 
 				int chosen = cancelReservation(reserv);
-				if(chosen > 0){ // Si eligio 0, no hago nada
+				if(chosen >= 0){ // Si devuelve -1 no hago nada
 					Ticket ticket;
 					get_from_list(reserv,chosen,&ticket);
 					printf(" Trying to cancel...\n");
