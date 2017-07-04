@@ -327,31 +327,46 @@ int showScreenings(ListADT screenings){
 }
 
 
-int startReservation(ClientInstance instance, char name[]){
+void startReservation(ClientInstance instance, char name[]){
 		// get movies from db
 		ReservationInfo res;
 		ListADT movies= get_movies(instance);
+
+		if(list_length(movies) < 0){
+			printf("\nWe're not showing any movies right now\n");
+			destroy_list(movies);
+			return;
+		}
+
 		int chosenM = showMovies(movies);
 		
 		if(chosenM == -1){
 			destroy_list(movies);
-			return -1;
+			return;
 		}
 
 		MovieInfo chosen_movie;
 		get_from_list(movies, chosenM, &chosen_movie);
 		
-		printf("\nChoose a screening for %s \n\n", chosen_movie.name);
 
 		ListADT screenings = get_screenings(instance, &chosen_movie);
 		// get days for movie
+
+		if(list_length(screenings) < 0){
+			destroy_list(movies);
+			destroy_list(screenings);
+			printf("No screenings available for %s", chosen_movie.name);
+			return;
+		}
+
+		printf("\nChoose a screening for %s \n\n", chosen_movie.name);
 
 		int chosenSc = showScreenings(screenings);
 
 		if(chosenSc == -1){
 			destroy_list(movies);
 			destroy_list(screenings);
-			return -1;
+			return;
 		}
 
 		ScreeningInfo chosen_screening;
@@ -386,7 +401,6 @@ int startReservation(ClientInstance instance, char name[]){
 		destroy_list(movies);
 		destroy_list(screenings);
 		free(seats);
-		return 0;
 }
 
 void viewReservations(ListADT list){
@@ -444,6 +458,7 @@ void startClient(ClientInstance instance, char name []){
 		if(option == RESERVE_MOVIE){
 
 			startReservation(instance,name);
+			require_keypress();
 
 		}else if(option == VIEW_RESERVATIONS){
 
