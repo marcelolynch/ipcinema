@@ -26,7 +26,7 @@ WHERE cliente = '%s' \
 ORDER BY mes,dia,slot,sala ASC;"
 
 #define QUERY_GET_RESERVED "SELECT asiento, proyeccion.id, nombrePelicula, dia, mes, slot, sala \
-FROM canceladas JOIN proyeccion ON proyeccion.id = canceladas.proyeccionID \
+FROM reserva JOIN proyeccion ON proyeccion.id = reserva.proyeccionID \
 WHERE cliente = '%s' \
 ORDER BY mes,dia,slot,sala ASC;"
 

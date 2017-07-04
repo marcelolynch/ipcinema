@@ -378,30 +378,37 @@ int startReservation(ClientInstance instance, char name[]){
 		return 0;
 }
 
-void viewReservations(char reserv[][128], int len){
-	
-	if(len==0){
-		printf("There are no reservations.\n");
+void viewReservations(ListADT list){
+	if(list_length(list)==0){
+		printf("      There are no reservations.\n\n");
 		return ;
 	}
-	printf("These are your reservations:\n");
 	int i;
-	for(i=0; i<len;i++){
-		printf("%d - %s\n",i+1,reserv[i] );
+	ListIteratorADT iter = get_iterator(list);
+	Ticket ticket;
+
+	for(i=0; iter_has_next(iter); i++){
+		iter_get_next(iter, &ticket);
+		ScreeningInfo s = ticket.screening;
+		printf("%d - %s|| %d/%d | Time: %s | Hall: %d | Row: %d Col: %d \n",i+1, ticket.screening.movie, s.day, s.month, getHour(s.slot), s.sala,(ticket.seat/HALL_COLS)+1,(ticket.seat%HALL_COLS)+1);
 	}
+	printf("\n");
+
+	destroy_iterator(iter);
 
 }
 
-int cancelReseravtion(char reserv[][128], int len){
-	if(len==0){
+int cancelReseravtion(ListADT list){
+	if(list_length(list)==0){
 		printf("There are no reservations.\n");
 		return 0;
 	}
 	while(1){
-		viewReservations(reserv,len);
+		printf("These are your reservations: \n");
+		viewReservations(list);
 		printf("\nInsert number of reservation you want to cancel: ");
 		int ans;
-		if(scanf("%d",&ans)>0 && ans>0 && ans<=len){
+		if(scanf("%d",&ans)>0 && ans>0 && ans<=list_length(list)){
 			clearBuffer();
 			return ans-1;
 		}
@@ -417,11 +424,20 @@ int startClient(ClientInstance instance, char name []){
 		if(option == RESERVE_MOVIE){
 			startReservation(instance,name);
 		}else if(option == VIEW_RESERVATIONS){
-			char reserv [2][128]={"HArry postre","maluma"};
-			viewReservations(reserv,2);
+			ListADT reserv=get_tickets(instance, name, 0);
+			printf("These are your reservations: \n");
+			viewReservations(reserv);
+
+			ListADT cancelled=get_tickets(instance, name, 1);
+			printf("These are your cancelled reservations: \n");
+			viewReservations(cancelled);
+
 		}else if (option == CANCEL_RESERVATION){
-			char reserv [2][128]={"HArry postre","maluma"};
-			cancelReseravtion(reserv,2);
+			ListADT reserv=get_tickets(instance, name, 0);
+			int chosen =cancelReseravtion(reserv);
+			ReservationInfo res;
+			get_from_list(reserv,chosen,&res);
+			cancel_reservation(instance, &res);
 		}else if (option == EXIT){
 			return 0;
 		}
