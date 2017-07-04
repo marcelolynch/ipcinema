@@ -435,8 +435,13 @@ int startClient(ClientInstance instance, char name []){
 		}else if (option == CANCEL_RESERVATION){
 			ListADT reserv=get_tickets(instance, name, 0);
 			int chosen =cancelReseravtion(reserv);
+			Ticket ticket;
+			get_from_list(reserv,chosen,&ticket);
+			printf("Trying to cancel...\n");
 			ReservationInfo res;
-			get_from_list(reserv,chosen,&res);
+			res.seat=ticket.seat;
+			strcpy(res.screening_id,ticket.screening.id);
+			strcpy(res.client,name);
 			cancel_reservation(instance, &res);
 		}else if (option == EXIT){
 			return 0;
