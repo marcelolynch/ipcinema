@@ -135,7 +135,7 @@ void showMoviesOnly(ListADT movies){
 
 	for(i=0; iter_has_next(iter); i++){
 		iter_get_next(iter, &movie);
-		printf("%d - %s\n",i+1, movie.name);
+		printf("\n%d - %s\n",i+1, movie.name);
 		printf("\t %s \n", movie.description);
 	}
 
@@ -164,7 +164,7 @@ int showMovies(ListADT movies){
 		return -1;
 	}
 	while(1){
-		printf("Here are the movies we're currently showing\n\n");
+		printf("Here are the movies we're currently showing\n");
 		showMoviesOnly(movies);
 		printf("\nInsert number of the movie: ");
 		int ans;
@@ -352,14 +352,14 @@ void startReservation(ClientInstance instance, char name[]){
 		ListADT screenings = get_screenings(instance, &chosen_movie);
 		// get days for movie
 
-		if(list_length(screenings) < 0){
+		if(list_length(screenings) == 0){
 			destroy_list(movies);
 			destroy_list(screenings);
-			printf("No screenings available for %s", chosen_movie.name);
+			printf(" No screenings available for %s", chosen_movie.name);
 			return;
 		}
 
-		printf("\nChoose a screening for %s \n\n", chosen_movie.name);
+		printf("\n Choose a screening for %s \n\n", chosen_movie.name);
 
 		int chosenSc = showScreenings(screenings);
 
