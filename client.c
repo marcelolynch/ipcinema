@@ -1,4 +1,3 @@
-#include "errors.h"
 #include "client_marshalling.h"
 
 #include <stdio.h>
@@ -21,7 +20,10 @@ int main(int argc, char*argv[]){
 	signal(SIGPIPE, SIG_IGN);
 
   
-  	if (argc != 3) fatal("Usage: client server-name server-port-number");
+  	if (argc != 3){
+  		fprintf(stderr, "Usage: client server-name server-port-number");
+  		exit(1);
+  	}
 
 	ClientInstance cli = new_client(argv[1], atoi(argv[2]));
 

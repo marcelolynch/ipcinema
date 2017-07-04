@@ -6,6 +6,16 @@
 #include <string.h>
 
 
+/* Request builder: parte del modulo de deserialización, procesa
+   el paquete enviado por el usuario y construye una estructura
+   ClientRequest (definida en server.h). Se resguarda contra
+   string overflows sabiendo que el buffer tiene un 0 de barrera
+   al final. Si se sobrepasa el limite con un dato string se devuelve
+   NULL.
+   
+   Mas allá de eso, no se chequea la integridad de los
+   paquetes. */
+
 static int check_packet_bound(int index){
 	if(index >= PACKET_LENGTH){
 		return 0;

@@ -11,14 +11,12 @@ pthread_mutex_t r_mtx; // Controla el acceso a readcount
 int readcount;
 
 
-pthread_mutex_t g_mtx;
+pthread_mutex_t g_mtx; // Zona critica
 
-sem_t shortwait;
+sem_t shortwait;	//Los semaforos actuan como colas
 sem_t longwait;
 
-// P = lock
-// V = unlock
-
+// Inicializo los mutex y semaforos
 void synchro_init(){
 	pthread_mutex_init(&w_mtx, NULL);
 	pthread_mutex_init(&r_mtx, NULL);
@@ -35,12 +33,12 @@ static void enter_writer(){
 	pthread_mutex_lock(&w_mtx);
 		writers++;
 		if(writers == 1){
-			//Espero en la cola corta
+			//Espero en la cola corta, por ahi hay lectores
 			sem_wait(&shortwait);
 		}
 	pthread_mutex_unlock(&w_mtx);
 
-	pthread_mutex_lock(&g_mtx); // Espero a que terminen los que estan adentro (escritor o lectores)
+	pthread_mutex_lock(&g_mtx); // Espero a que terminen los que estan adentro (escritores o lectores)
 }
 
 
@@ -49,7 +47,7 @@ static void leave_writer(){
 
 	pthread_mutex_lock(&w_mtx);
 		writers--;
-		if(writers == 0){ 			//Pueden entrar el siguiente
+		if(writers == 0){ 			//Pueden entrar el siguiente lector
 			sem_post(&shortwait);
 		}
 	pthread_mutex_unlock(&w_mtx); 
@@ -68,8 +66,8 @@ static void enter_reader(){
 										//Si no soy el primer lector ya hay alguno adentro, entro directo
 	pthread_mutex_unlock(&r_mtx);
 	
-	sem_post(&shortwait); 				// Entra el proximo de la cola corta (si es un escritor, solo yo entro a la zona critica
-										// y el resto de los lectores se encolaran)
+	sem_post(&shortwait); 				// Entrara el proximo de la cola corta (si es un escritor, solo yo entro a la zona critica
+										// y el resto de los lectores se encolaran hasta que termine ese).
 	sem_post(&longwait); 				// Dejo entrar al proximo lector a la cola corta 
 }
 

@@ -16,14 +16,18 @@
 
 
 int main(int argc, char*argv[]){
+  
+  	if (argc != 3){
+	  	printf("Usage: client server-name server-port-number\n");
+	  	exit(1);
+  	}	
+
 	srand(time(NULL));
 	//Para manejar yo lo errores de broken pipes
 	signal(SIGPIPE, SIG_IGN);
 
-  
-  	if (argc != 3) fatal("Usage: client server-name server-port-number");
 
-	ClientInstance cli = new_client(argv[1], atoi(argv[2]));
+  	ClientInstance cli = new_client(argv[1], atoi(argv[2]));
 
 	char buf[1024];
 	while(1){

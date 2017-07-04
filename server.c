@@ -1,4 +1,3 @@
-#include "errors.h"
 #include "db.h"
 #include "queries.h"
 #include "server.h"
@@ -54,7 +53,10 @@ typedef struct ti{
 DbSession database;
 
 int main(int argc, char*argv[]){
-    if (argc != 2) fatal("Usage: server server-port-number");
+    if (argc != 2){
+        printf("Usage: server server-port-number");
+        exit(1);
+    }
 
     set_log();
 
@@ -300,8 +302,8 @@ static void cancel_reservation(ClientSession session, ReservationInfo* info){
     char ** row = next_row(q);
 
     if(atoi(row[0]) == 0){ // No existe esa reserva
-        free(row);
-        return; //TODO: Errcodes
+        free(row);          // No hago nada
+        return; 
     }
 
     destroy_query_data(q);
@@ -456,7 +458,7 @@ static void send_seating_info(ClientSession session, char* screening_id){
         free(row);
     }
 
-    send_seats(session, seats);
+    send_seats(session, seats, MAX_SEATS);
     free(query);
     free(seats);
     destroy_query_data(q);

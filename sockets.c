@@ -1,5 +1,4 @@
 #include "sockets.h"
-#include "errors.h"
 #include "protocol.h"
 
 #include <netdb.h>
@@ -105,7 +104,8 @@ Connection connect_to_socket(Address addr){
 	con->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	if(connect(con->fd, (struct sockaddr*)&addr->addr, sizeof(addr->addr)) != 0){
-		fatal("Connect failed");
+		fprintf(stderr, "[FATAL ERROR] Connection failed. Can't continue\n");
+		exit(5);
 	}
 
 	return con;

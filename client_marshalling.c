@@ -7,6 +7,13 @@
 #include <string.h>
 #include <stdio.h>
 
+
+/** 
+	Capa de serialización/deserialización del lado del cliente.
+	Codifica y decodifica las estructuras para satisfacer el 
+	protocolo de comunicación con el servidor.
+**/
+
 static int client_send(ClientInstance instance, char * msg);
 static int client_rcv(ClientInstance instance, char* buffer);
 
@@ -57,6 +64,11 @@ static void wait_ack(ClientInstance instance){
 
 	fflush(stdout);
 }
+
+/* Requests al servidor: el primer byte indica el tipo de request,
+	los datos se agregan sucevisamente a partir del segundo byte */
+
+/** Las siguientes requieren actualizaciones sobre la base de datos */
 
 void add_movie(ClientInstance instance, MovieInfo* movie){
 	clear_buffer();
@@ -109,7 +121,10 @@ void delete_screening(ClientInstance instance, ScreeningInfo* screening){
 
 
 
+
 static void fill_reservation_data(char* buf, ReservationInfo* res){
+	// Cuerpo de make_ y cancel_reservation
+	
 	buf[1] = res->seat;
 	strcpy(&buf[2], res->screening_id);
 	strcpy(&buf[2 + strlen(&buf[2]) +1], res->client);
@@ -132,6 +147,11 @@ void cancel_reservation(ClientInstance instance, ReservationInfo* res){
 }
 
 
+
+/* 
+	Las siguientes piden informacion desde el servidor. El metodo de
+	obtenerlas se describe en el protocolo y en server_marshalling.c.
+*/
 
 ListADT get_tickets(ClientInstance instance, char* client, int req_cancelled){
 	buf[0] = RESERVATION_LIST;
@@ -295,6 +315,9 @@ char * get_hall(ClientInstance instance, char* screening_id){
 	return seats;
 }
 
+
+
+/* Wrappers para enviar y recibir. Si la conexión se cerró se termina el programa. */
 
 
 static int client_send(ClientInstance instance, char * msg){
