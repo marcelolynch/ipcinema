@@ -43,9 +43,9 @@ while(1){
 	//printf("client type %d\n",ans);
 	if(ans== CLIENT){
 		printf("----- Starting client ----- \n");
-		char name [128];
+		char name[CLIENT_NAME_LEN+1];
 		getString("What's your name?: ",name, CLIENT_NAME_LEN);
-		startClient(instance,name);
+		startClient(instance, name);
 	} else if (ans == ADMIN){
 		printf("----- Starting Administrator ----- \n");
 		startAdministrator(instance);
