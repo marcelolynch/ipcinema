@@ -66,11 +66,11 @@ static response_t wait_ack(ClientInstance instance){
 	client_rcv(instance, buf);
 	printf("Server replies: ");
 	if(buf[0] == OK){
-		printf("Ok\n");
+		printf("OK\n");
 		return SRV_OK;
 	}
 	else if(buf[0] == ERROR){
-		printf("Error %s\n", error_name(buf[1]));
+		printf("[Error] - %s\n", error_name(buf[1]));
 		return ntoh_error(buf[1]);
 	} else {
 		printf("Unknown reply\n");
@@ -126,10 +126,7 @@ response_t add_screening(ClientInstance instance, ScreeningInfo* screening){
 response_t delete_screening(ClientInstance instance, ScreeningInfo* screening){
 	clear_buffer();
 	buf[0] = SCREENING_DELETE;
-	buf[1] = screening->day;
-	buf[2] = screening->month;
-	buf[3] = screening->slot;
-	buf[4] = screening->sala;
+	strcpy(&buf[1], screening->id);
 
 	client_send(instance,buf);
 	return wait_ack(instance);

@@ -368,7 +368,7 @@ int startReservation(ClientInstance instance, char name[]){
 			response_t r = make_reservation(instance, &res);
 			if(r != SRV_OK){
 				if(r == DB_VIOLATION){
-					printf("It seems that seat was taken while you were choosing. Try again!\n");
+					printf("It seems that the seat you chose became unavailable while you were pondering. Try again!\n");
 				} else if(r == NO_SUCH_DATA){
 					printf("It would seem that this screening isn't available anymore. Sorry!\n");
 				} else { 

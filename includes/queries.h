@@ -3,7 +3,7 @@
 
 #define STMNT_ADD_SCREENING "INSERT INTO Proyeccion(nombrePelicula, dia, mes, slot, sala) VALUES ('%s', %d, %d, %d, %d);"
 
-#define STMNT_DELETE_SCREENING "DELETE FROM Proyeccion WHERE dia = %d AND mes = %d AND slot = %d AND sala = %d;"
+#define STMNT_DELETE_SCREENING "DELETE FROM Proyeccion WHERE id = %d"
 
 #define STMNT_DELETE_MOVIE "DELETE FROM Pelicula WHERE nombre = '%s';"
 /*Realizar Reserva*/
@@ -13,7 +13,11 @@
 DELETE FROM reserva WHERE cliente = '%s' AND proyeccionId = %d AND asiento = %d;"
 
 #define QUERY_RESERVATION_EXISTS "SELECT COUNT(*) FROM reserva WHERE cliente = '%s' AND proyeccionId = %d AND asiento = %d;"
-	
+
+#define QUERY_SCREENING_EXISTS "SELECT COUNT(*) FROM proyeccion WHERE id = %d;"
+
+#define QUERY_MOVIE_EXISTS "SELECT COUNT(*) FROM pelicula WHERE nombre = '%s';"
+
 #define QUERY_GET_SCREENINGS "SELECT id,dia,mes,slot,sala FROM Proyeccion WHERE nombrePelicula = '%s' ORDER BY mes,dia,slot,sala ASC;"
 
 #define QUERY_GET_MOVIE_LIST "SELECT nombre,descripcion FROM Pelicula;"

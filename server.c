@@ -236,7 +236,7 @@ static void do_stmnt_and_ack(ClientSession session, char* stmnt){
 }
 
 
-static int assert_existance(char* stmnt){
+static int assert_existence(char* stmnt){
     QueryData q = new_query(stmnt, 1);
     do_query(database,q);
     char ** row = next_row(q);
@@ -275,6 +275,14 @@ static void delete_movie(ClientSession session, char* name){
 static void add_screening(ClientSession session, ScreeningInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN + strlen(info->movie));
 
+    sprintf(stmnt, QUERY_MOVIE_EXISTS, info->movie);
+    if(!assert_existence(stmnt)){
+        client_send_error(session, NO_SUCH_ELEMENT);
+        free(stmnt);
+        return;
+    }
+
+
     sprintf(stmnt, STMNT_ADD_SCREENING, info->movie, info->day, info->month, info->slot, info->sala);
 
 
@@ -285,7 +293,15 @@ static void add_screening(ClientSession session, ScreeningInfo* info){
 
 static void delete_screening(ClientSession session, ScreeningInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN);
-    sprintf(stmnt, STMNT_DELETE_SCREENING, info->day, info->month, info->slot, info->sala);
+    sprintf(stmnt, QUERY_SCREENING_EXISTS, atoi(info->id));
+
+    if(!assert_existence(stmnt)){
+        client_send_error(session, NO_SUCH_ELEMENT);
+        free(stmnt);
+        return;
+    }
+
+    sprintf(stmnt, STMNT_DELETE_SCREENING, atoi(info->id));
     
     do_stmnt_and_ack(session, stmnt);
     free(stmnt);
@@ -313,8 +329,9 @@ static void cancel_reservation(ClientSession session, ReservationInfo* info){
 
     sprintf(stmnt, QUERY_RESERVATION_EXISTS, client, screening_id, seat);
     
-    if(!assert_existance(stmnt)){
+    if(!assert_existence(stmnt)){
         client_send_error(session, NO_SUCH_ELEMENT);
+        free(stmnt);
         return;
     }
 

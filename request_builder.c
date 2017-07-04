@@ -82,10 +82,7 @@ ClientRequest* req_screening_delete(char* buf){
 	req->data = failfast_malloc(sizeof(ScreeningInfo));
 	ScreeningInfo* info = (ScreeningInfo*)req->data;
 
-	info->day = buf[1];
-	info->month = buf[2];
-	info->slot = buf[3];
-	info->sala = buf[4];
+	strcpy(info->id,&buf[1]);
 
 	return req;
 }
