@@ -257,6 +257,7 @@ int showClientOptions(){
 	}
 }
 
+/* imprime la pregunta q y copia en name el string ingresado por la entrada estandar"*/
 void getString(char q[],char name [], size_t max_len){
 	printf("%s",q);
 	int c;
@@ -271,12 +272,15 @@ void getString(char q[],char name [], size_t max_len){
 	name[i]=0;
 }
 
-int getMovieInfo(char name [], char description []){
+
+
+void getMovieInfo(char name [], char description []){
 	getString("Movie name: ",name, MOVIE_NAME_LEN);
 	getString("Movie description: ",description, DESCRIPTION_LEN);
-	return 0;
+	return;
 }
 
+/*Devuelve el numero ingresado por la entrada estandar*/
 int getNum(char string [],int max){
 	while(1){
 	printf("%s (1-%d): ",string,max);
@@ -290,6 +294,8 @@ int getNum(char string [],int max){
 	}
 }
 
+/* 	Hace una pregunta del tipo (y/n)
+	Devuelve 1 en caso de ser 'y', 0 en caso de 'n' */
 int askYN(char question []){
 	while(1){
 		printf("%s (y/n): ",question);
@@ -305,7 +311,7 @@ int askYN(char question []){
 }
 
 
-
+/* Devuelve el indice en el array del screening seleccionado*/
 int showScreenings(ListADT screenings){
 	if(list_length(screenings) == 0){
 		printf("There are no screenings for that movie.\n");
@@ -402,7 +408,7 @@ void startReservation(ClientInstance instance, char name[]){
 		destroy_list(screenings);
 		free(seats);
 }
-
+/* Imprime la lista de tickets */
 void viewReservations(ListADT list){
 	if(list_length(list) == 0){
 		printf(" There are no reservations.\n\n");
@@ -423,6 +429,8 @@ void viewReservations(ListADT list){
 
 }
 
+/* Imprime la lista de tickets y hace seleccionar un ticket para cancelar*/
+/* Devuleve el indice ,en la lista, del ticket seleccionado*/ 
 int cancelReservation(ListADT list){
 	if(list_length(list)==0){
 		printf(" There are no reservations.\n");
