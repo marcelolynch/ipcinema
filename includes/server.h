@@ -19,6 +19,7 @@ typedef enum {
 typedef enum{
 	INVALID_REQUEST,
 	CONSTRAINT_VIOLATION,
+	NO_SUCH_ELEMENT,
 	UNKNOWN_DB_ERROR,
 	OTHER
 } error_t;

@@ -51,16 +51,32 @@ static char* error_name(char code){
 	}
 }
 
-static void wait_ack(ClientInstance instance){
+
+static response_t ntoh_error(char code){
+	switch(code){
+		case ERR_NO_SUCH_DATA:		return NO_SUCH_DATA;
+		case ERR_INVALID_PACKET: 	return PROTOCOL_ERROR;
+		case ERR_CONSTRAINT_VIOLATION: return DB_VIOLATION;
+		case ERR_UNKNOWN:
+		default:					return UNKNOWN;
+	}
+}
+
+static response_t wait_ack(ClientInstance instance){
 	client_rcv(instance, buf);
 	printf("Server replies: ");
-	if(buf[0] == ERROR){
-		printf("Error %s\n", error_name(buf[1]));
-	} else if(buf[0] == OK){
+	if(buf[0] == OK){
 		printf("Ok\n");
+		return SRV_OK;
+	}
+	else if(buf[0] == ERROR){
+		printf("Error %s\n", error_name(buf[1]));
+		return ntoh_error(buf[1]);
 	} else {
 		printf("Unknown reply\n");
+		return UNKNOWN;
 	}
+
 
 	fflush(stdout);
 }
@@ -70,7 +86,7 @@ static void wait_ack(ClientInstance instance){
 
 /** Las siguientes requieren actualizaciones sobre la base de datos */
 
-void add_movie(ClientInstance instance, MovieInfo* movie){
+response_t add_movie(ClientInstance instance, MovieInfo* movie){
 	clear_buffer();
 	buf[0] = MOVIE_ADD;
 	int len = strlen(movie->name);
@@ -78,21 +94,21 @@ void add_movie(ClientInstance instance, MovieInfo* movie){
 	strcpy(&buf[1+len+1], movie->description);
 
 	client_send(instance, buf);
-	wait_ack(instance);
+	return wait_ack(instance);
 }
 
 
-void delete_movie(ClientInstance instance, char* movie_name){
+response_t delete_movie(ClientInstance instance, char* movie_name){
 	clear_buffer();
 	buf[0] = MOVIE_DELETE;
 	strcpy(buf+1, movie_name);
 	client_send(instance, buf);
-	wait_ack(instance);
+	return wait_ack(instance);
 
 }
 
 
-void add_screening(ClientInstance instance, ScreeningInfo* screening){
+response_t add_screening(ClientInstance instance, ScreeningInfo* screening){
 	clear_buffer();
 	buf[0] = SCREENING_ADD;
 	buf[1] = screening->day;
@@ -102,20 +118,21 @@ void add_screening(ClientInstance instance, ScreeningInfo* screening){
 	strcpy(&buf[5], screening->movie);
 
 	client_send(instance,buf);
-	wait_ack(instance);
+	return wait_ack(instance);
 
 }
 
 
-void delete_screening(ClientInstance instance, ScreeningInfo* screening){
+response_t delete_screening(ClientInstance instance, ScreeningInfo* screening){
 	clear_buffer();
 	buf[0] = SCREENING_DELETE;
 	buf[1] = screening->day;
-	buf[2] = screening->day;
+	buf[2] = screening->month;
 	buf[3] = screening->slot;
+	buf[4] = screening->sala;
 
 	client_send(instance,buf);
-	wait_ack(instance);
+	return wait_ack(instance);
 
 }
 
@@ -130,20 +147,20 @@ static void fill_reservation_data(char* buf, ReservationInfo* res){
 	strcpy(&buf[2 + strlen(&buf[2]) +1], res->client);
 }
 
-void make_reservation(ClientInstance instance, ReservationInfo* res){
+response_t make_reservation(ClientInstance instance, ReservationInfo* res){
 	clear_buffer();
 	buf[0] = MAKE_RESERVATION;
 	fill_reservation_data(buf, res);
 	client_send(instance,buf);
-	wait_ack(instance);
+	return wait_ack(instance);
 }
 
 
-void cancel_reservation(ClientInstance instance, ReservationInfo* res){
+response_t cancel_reservation(ClientInstance instance, ReservationInfo* res){
 	buf[0] = CANCEL_RESERVATION;
 	fill_reservation_data(buf, res);
 	client_send(instance,buf);
-	wait_ack(instance);
+	return wait_ack(instance);
 }
 
 

@@ -27,8 +27,8 @@
 #define EXIT 4
 
 int getClientType();
-int startClient();
-int startAdministrator();
+void startClient();
+void startAdministrator();
 void getString(char q[],char name []);
 
 
@@ -221,8 +221,8 @@ int showAdminOptions(){
 		printf("\n\nWhat would you like to do?\n");
 		printf("1 - Add movie\n");
 		printf("2 - Add screening\n");
-		printf("3 - Delte movie\n");
-		printf("4 - Delte screening\n");
+		printf("3 - Delete movie\n");
+		printf("4 - Delete screening\n");
 		printf("5 - Show movies\n");
 		printf("6 - Show screenings\n");
 		printf("7 - Exit\n");
@@ -338,7 +338,6 @@ int startReservation(ClientInstance instance, char name[]){
 		
 		printf("Chosen movie: %d: %s\n", chosenM, chosen_movie.name);
 
-
 		ListADT screenings = get_screenings(instance, &chosen_movie);
 		// get days for movie
 		int chosenSc = showScreenings(screenings);
@@ -351,8 +350,7 @@ int startReservation(ClientInstance instance, char name[]){
 
 		ScreeningInfo chosen_screening;
 		get_from_list(screenings, chosenSc, &chosen_screening);
-		
-
+	
 		// get hall from db
 		char * seats= get_hall(instance, chosen_screening.id);
 		//int seat;
@@ -367,7 +365,16 @@ int startReservation(ClientInstance instance, char name[]){
 			res.seat=chosenSe;
 			strcpy(res.screening_id, chosen_screening.id);
 			strcpy(res.client,name);
-			make_reservation(instance, &res);
+			response_t r = make_reservation(instance, &res);
+			if(r != SRV_OK){
+				if(r == DB_VIOLATION){
+					printf("It seems that seat was taken while you were choosing. Try again!\n");
+				} else if(r == NO_SUCH_DATA){
+					printf("It would seem that this screening isn't available anymore. Sorry!\n");
+				} else { 
+					printf("An error ocurred. Try again later\n");
+				}
+			}
 		}else{
 			printf("The reservation was cancelled.\n");
 		}
@@ -417,7 +424,7 @@ int cancelReseravtion(ListADT list){
 	}
 }
 
-int startClient(ClientInstance instance, char name []){
+void startClient(ClientInstance instance, char name []){
 	while(1){
 		printf("\n\nWelcome, %s!\n",name );
 		int option =showClientOptions();
@@ -444,12 +451,12 @@ int startClient(ClientInstance instance, char name []){
 			strcpy(res.client,name);
 			cancel_reservation(instance, &res);
 		}else if (option == EXIT){
-			return 0;
+			return;
 		}
 	}
 }
 
-int startAdministrator(ClientInstance instance){
+void startAdministrator(ClientInstance instance){
 	while(1){
 	int option =showAdminOptions();
 	if(option == ADD_MOVIE){
@@ -462,7 +469,14 @@ int startAdministrator(ClientInstance instance){
 		
 		if(askYN("Do you want add this movie?")){
 			printf("Adding movie...\n");
-			add_movie(instance,&movie);
+			response_t r = add_movie(instance,&movie);
+			if(r != SRV_OK){
+				if(r == DB_VIOLATION){
+					printf("That movie was already added!\n");
+				} else {
+					printf("An error ocurred. Try again later\n");
+				}
+			}
 		}else{
 			printf("Operation cancelled\n");
 		}
@@ -483,7 +497,18 @@ int startAdministrator(ClientInstance instance){
 		printf("Day: %d Month: %d Slot: %d Hall:%d\n",screening.day,screening.month,screening.slot,screening.sala);
 		if(askYN("Do you want add this screening?")){
 			printf("Adding screening ...\n");
-			add_screening(instance,&screening);
+			response_t r = add_screening(instance,&screening);
+		
+			if(r != SRV_OK){
+				if(r == DB_VIOLATION){
+					printf("That slot is already occupied!\n");
+				} else if (r == NO_SUCH_DATA){
+					printf("It seems that the movie for which the screening was selected was deleted.\n");
+				} else {
+					printf("An error ocurred. Try again later\n");
+				}
+			}
+
 		}else{
 			printf("Operation cancelled\n");
 		}
@@ -502,29 +527,42 @@ int startAdministrator(ClientInstance instance){
 			printf("Operation cancelled\n");
 		}
 	}else if(option == DEL_SCREENING){
-		ScreeningInfo screening;
-		getString("Insert movie name: ",screening.movie);
-		screening.month=getNum("Insert the month:",12);
-		screening.day = getNum("Insert the day of the month:",31);
-		screening.slot= getNum("Insert the slot:",MAX_SLOTS);
-		screening.sala= getNum("Insert the hall:",MAX_HALL);
-		printf("Name: %s\n",screening.movie );
-		printf("Day: %d Slot: %d Sala:%d\n",screening.day,screening.slot,screening.sala);
-		if(askYN("Do you want delete this screening?")){
-			printf("Deleting screening ...\n");
-			delete_screening(instance,&screening);
-		}else{
-			printf("Operation cancelled\n");
+		ListADT movies = get_movies(instance);
+		int chosenM = showMovies(movies);
+		
+		MovieInfo chosen_movie;
+		get_from_list(movies, chosenM, &chosen_movie);
+
+		ListADT screenings = get_screenings(instance, &chosen_movie);
+
+		int chosenSc = showScreenings(screenings);
+		
+		if(chosenSc > 0){
+			ScreeningInfo chosen_screening;
+			get_from_list(screenings, chosenSc, &chosen_screening);
+
+
+			if(askYN("Do you want delete this screening?")){
+				printf("Deleting screening ...\n");
+				delete_screening(instance,&chosen_screening);
+			}else{
+				printf("Operation cancelled\n");
+			}
+	
 		}
 		
+		destroy_list(screenings);
+		destroy_list(movies);
+
 	}else if(option == EXIT_ADMIN){
 
-		return 0;
+		return;
 
 	}else if(option == SHOW_MOVIES){
 
 		ListADT movies = get_movies(instance);
 		showMoviesOnly(movies);
+		destroy_list(movies);
 
 	} else if(option == SHOW_SCREENING){
 
@@ -541,6 +579,7 @@ int startAdministrator(ClientInstance instance){
 			showScreeningsOnly(screenings);
 		}
 
+		destroy_list(movies);
 		destroy_list(screenings);
 	}
 }

@@ -85,6 +85,7 @@ ClientRequest* req_screening_delete(char* buf){
 	info->day = buf[1];
 	info->month = buf[2];
 	info->slot = buf[3];
+	info->sala = buf[4];
 
 	return req;
 }

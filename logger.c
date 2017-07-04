@@ -9,6 +9,8 @@
 
 #include "log.h"
 
+/* Proceso logger. Se utilizan System V Message Queues */
+
 
 #define MSG_ANY 0
 
@@ -28,6 +30,7 @@ void signal_handler(int signum){
   if(q_set){
     //Cierro la message queue
     msgctl(msqid, IPC_RMID, NULL);
+    q_set = 0;
     exit(3);
   }
 }

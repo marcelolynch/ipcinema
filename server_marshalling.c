@@ -284,6 +284,7 @@ int send_seats(ClientSession session, char* seats, int size){
 static char get_error_code(error_t error){
 	switch(error){
 		case INVALID_REQUEST: 		return ERR_INVALID_PACKET;			break;
+		case NO_SUCH_ELEMENT:		return ERR_NO_SUCH_DATA;
 		case CONSTRAINT_VIOLATION: 	return ERR_CONSTRAINT_VIOLATION;	break;
 		default: 					return ERR_UNKNOWN;					break;
 	}

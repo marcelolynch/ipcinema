@@ -235,6 +235,20 @@ static void do_stmnt_and_ack(ClientSession session, char* stmnt){
 
 }
 
+
+static int assert_existance(char* stmnt){
+    QueryData q = new_query(stmnt, 1);
+    do_query(database,q);
+    char ** row = next_row(q);
+
+    int count = atoi(row[0]);
+    free(row);
+    destroy_query_data(q);
+
+    return (count != 0);
+}
+
+
 static void add_movie(ClientSession session, MovieInfo* info){
     #ifdef DEBUG
     sleep(10);
@@ -291,23 +305,18 @@ static void make_reservation(ClientSession session, ReservationInfo* info){
 static void cancel_reservation(ClientSession session, ReservationInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN);
     
+
     char * client = info->client;
     int seat = info->seat;
     int screening_id = info->screening_id;
 
+
     sprintf(stmnt, QUERY_RESERVATION_EXISTS, client, screening_id, seat);
     
-    QueryData q = new_query(stmnt, 1);
-    do_query(database,q);
-    char ** row = next_row(q);
-
-    if(atoi(row[0]) == 0){ // No existe esa reserva
-        free(row);          // No hago nada
-        return; 
+    if(!assert_existance(stmnt)){
+        client_send_error(session, NO_SUCH_ELEMENT);
+        return;
     }
-
-    destroy_query_data(q);
-    free(row);
 
     sprintf(stmnt, STMNT_CANCEL_AND_DELETE, client, screening_id, seat, 
                                             client, screening_id, seat);
@@ -318,6 +327,7 @@ static void cancel_reservation(ClientSession session, ReservationInfo* info){
 }
 
 
+
 static void get_screenings(ClientSession session, char* movieId){    
     ListADT s = get_screening_list(movieId);
     send_screenings(session, s);
@@ -326,7 +336,6 @@ static void get_screenings(ClientSession session, char* movieId){
 
 
 static ListADT get_screening_list(char* movie){
- 
     char * query = failfast_malloc(MAX_QUERY_LEN);
 
     sprintf(query, QUERY_GET_SCREENINGS, movie);

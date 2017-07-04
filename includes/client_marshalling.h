@@ -45,6 +45,14 @@ typedef struct tckt{
 } Ticket;
 
 
+typedef enum{
+	SRV_OK,
+	PROTOCOL_ERROR,
+	DB_VIOLATION,
+	NO_SUCH_DATA,
+	UNKNOWN
+} response_t;
+
 ListADT get_movies(ClientInstance instance);
 
 ListADT get_screenings(ClientInstance instance, MovieInfo* movie);
@@ -56,16 +64,16 @@ char * get_hall(ClientInstance instance, char* screening_id);
 
 ClientInstance new_client(char* srv, int portno);
 
-void add_movie(ClientInstance instance, MovieInfo* movie);
+response_t add_movie(ClientInstance instance, MovieInfo* movie);
 
-void delete_movie(ClientInstance instance, char* movie_name);
+response_t delete_movie(ClientInstance instance, char* movie_name);
 
-void add_screening(ClientInstance instance, ScreeningInfo* screening);
+response_t add_screening(ClientInstance instance, ScreeningInfo* screening);
 
-void delete_screening(ClientInstance instance, ScreeningInfo* screening);
+response_t delete_screening(ClientInstance instance, ScreeningInfo* screening);
 
-void make_reservation(ClientInstance instance, ReservationInfo* res);
+response_t make_reservation(ClientInstance instance, ReservationInfo* res);
 
-void cancel_reservation(ClientInstance instance, ReservationInfo* res);
+response_t cancel_reservation(ClientInstance instance, ReservationInfo* res);
 
 #endif
