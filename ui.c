@@ -426,7 +426,7 @@ void viewReservations(ListADT list){
 int cancelReservation(ListADT list){
 	if(list_length(list)==0){
 		printf(" There are no reservations.\n");
-		return 0;
+		return -1;
 	}
 	while(1){
 		printf("These are your active tickets:\n\n");
