@@ -113,6 +113,10 @@ static void * thread_work(void* data){
     while(1){
 
         ClientRequest * req = wait_request(session);
+        if(req == NULL){
+            //Hubo error en la recepcion, ignoro
+            continue;
+        }
         process_request(session,req);
         free(req);
      }

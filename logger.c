@@ -6,6 +6,7 @@
 #include <sys/msg.h>
 #include <signal.h>
 #include <sys/prctl.h>
+#include <time.h>
 
 #include "log.h"
 
@@ -21,7 +22,11 @@ typedef void (*sighandler_t)(int);
 int msqid;
 key_t key;
 
-int q_set;
+// Logfile
+FILE* logfile;
+
+//Flags
+int q_set; // Indica si la MQ está activa
 
 void signal_handler(int signum){
   if(signum == SIGHUP){
@@ -32,6 +37,9 @@ void signal_handler(int signum){
     msgctl(msqid, IPC_RMID, NULL);
     q_set = 0;
     exit(3);
+  }
+  if(logfile != NULL){
+    fclose(logfile);
   }
 }
 
@@ -58,6 +66,18 @@ int main(int argc, char* argv[])
         exit(1);
     }
     
+
+    logfile = fopen("server.log", "a");
+    
+    if(logfile == NULL){
+        fprintf(stderr, "[LOG] Logging process couldn't open logfile\n");
+    } else{
+        time_t t = time(0);
+        char* timestamp = asctime(localtime(&t));
+        fprintf(logfile,"\n\n ============================================================ \n NEW LOG INITIALIZATION: TIMESTAMP: %s ============================================================ \n\n", timestamp);
+        fflush(logfile);
+    }
+
     q_set = 1;
 
     printf("Successful log setup\n");
@@ -70,6 +90,11 @@ int main(int argc, char* argv[])
 
         printf("%s\n", buf.msg);
         fflush(stdout);
+
+        if(logfile){
+            fprintf(logfile, "%s\n", buf.msg);
+        }
+        
     }
 
 

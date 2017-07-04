@@ -92,8 +92,12 @@ ClientRequest * wait_request(ClientSession cli){
 	char buf[PACKET_LENGTH + 1] = {0};
 
 	int rd = receive_message(cli->con, buf);
-	if(!rd){
-		srv_log("[ERROR] Closed socker or error in receive. Closing connection");
+	if(rd < 0){
+		srv_log("[WARNING] Error in receive from client");
+		return NULL;
+	}
+	if(rd == 0){
+		srv_log("[CLIENT] Closed socket. Closing connection");
 		destroy_connection(cli->con);
 		free(cli);
 		pthread_exit(NULL);
