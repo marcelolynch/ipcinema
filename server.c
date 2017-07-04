@@ -311,6 +311,15 @@ static void delete_screening(ClientSession session, ScreeningInfo* info){
 static void make_reservation(ClientSession session, ReservationInfo* info){
     char * stmnt = failfast_malloc(MAX_QUERY_LEN);
 
+    sprintf(stmnt, QUERY_SCREENING_EXISTS, info->screening_id);
+
+    if(!assert_existence(stmnt)){
+        client_send_error(session, NO_SUCH_ELEMENT);
+        free(stmnt);
+        return;
+    }
+
+
     sprintf(stmnt, STMNT_MAKE_RESERVATION, info->client, info->screening_id, info->seat);
 
     do_stmnt_and_ack(session, stmnt);
