@@ -405,7 +405,7 @@ void viewReservations(ListADT list){
 
 }
 
-int cancelReseravtion(ListADT list){
+int cancelReservation(ListADT list){
 	if(list_length(list)==0){
 		printf("There are no reservations.\n");
 		return 0;
@@ -429,8 +429,11 @@ void startClient(ClientInstance instance, char name []){
 		printf("\n\nWelcome, %s!\n",name );
 		int option =showClientOptions();
 		if(option == RESERVE_MOVIE){
+
 			startReservation(instance,name);
+
 		}else if(option == VIEW_RESERVATIONS){
+
 			ListADT reserv=get_tickets(instance, name, 0);
 			printf("These are your reservations: \n");
 			viewReservations(reserv);
@@ -441,7 +444,7 @@ void startClient(ClientInstance instance, char name []){
 
 		}else if (option == CANCEL_RESERVATION){
 			ListADT reserv=get_tickets(instance, name, 0);
-			int chosen =cancelReseravtion(reserv);
+			int chosen =cancelReservation(reserv);
 			Ticket ticket;
 			get_from_list(reserv,chosen,&ticket);
 			printf("Trying to cancel...\n");
