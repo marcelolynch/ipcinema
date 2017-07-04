@@ -40,6 +40,7 @@ void signal_handler(int signum){
   }
   if(logfile != NULL){
     fclose(logfile);
+    logfile = NULL;
   }
 }
 
@@ -91,7 +92,7 @@ int main(int argc, char* argv[])
         printf("%s\n", buf.msg);
         fflush(stdout);
 
-        if(logfile){
+        if(logfile != NULL){
             fprintf(logfile, "%s\n", buf.msg);
         }
         
