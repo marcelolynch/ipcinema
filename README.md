@@ -1,7 +1,7 @@
 # IPCinema
 
 ## Compilación
-`make all` dentro del directorio raíz genera los ejecutables *client.bin*, *server.bin* y *logging.bin*, correspondientes al proceso cliente, servidor y el daemon de logging.
+`make all` dentro del directorio raíz genera los ejecutables *client.bin*, *server.bin* y *logger.bin*, correspondientes al proceso cliente, servidor y el daemon de logging.
 
 Con `make clean` se borran los binarios.
 
