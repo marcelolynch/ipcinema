@@ -543,10 +543,9 @@ void startAdministrator(ClientInstance instance){
 
 		int chosenSc = showScreenings(screenings);
 		
-		if(chosenSc > 0){
+		if(chosenSc >= 0){
 			ScreeningInfo chosen_screening;
 			get_from_list(screenings, chosenSc, &chosen_screening);
-
 
 			if(askYN("Do you want delete this screening?")){
 				printf("Deleting screening ...\n");
