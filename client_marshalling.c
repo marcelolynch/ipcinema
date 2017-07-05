@@ -37,6 +37,12 @@ ClientInstance new_client(char* srv, int portno){
 	return instance;
 }
 
+
+void end_client(ClientInstance instance){
+	destroy_connection(instance->connection);
+	free(instance);
+}
+
 static void clear_buffer(){
 	memset(buf, 0, PACKET_LENGTH);
 }
