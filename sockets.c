@@ -113,11 +113,11 @@ Connection connect_to_socket(Address addr){
 
 
 
-int receive_message(Connection con, char* buf){
-	int r = read(con->fd, buf, PACKET_LENGTH); /* read from socket */
+int receive_message(Connection con, char* buf, size_t len){
+	int r = read(con->fd, buf, len); /* read from socket */
 	return r;
 }
 
-int send_message(Connection con, char* buf){
-	return send(con->fd, buf, PACKET_LENGTH, MSG_NOSIGNAL);
+int send_message(Connection con, char* buf, size_t len){
+	return send(con->fd, buf, len, MSG_NOSIGNAL);
 }
