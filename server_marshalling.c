@@ -91,7 +91,7 @@ ClientRequest * wait_request(ClientSession cli){
 	//Cuando hago strlen de no sobrepasarme
 	char buf[PACKET_LENGTH + 1] = {0};
 
-	int rd = receive_message(cli->con, buf);
+	int rd = receive_message(cli->con, buf, PACKET_LENGTH);
 	if(rd < 0){
 		srv_log("[WARNING] Error in receive from client");
 		return NULL;
@@ -146,8 +146,8 @@ int send_screenings(ClientSession session, ListADT screenings){
 	buf[0] = TRANSACTION_BEGIN;
 	buf[1] = list_length(screenings);
 	
-	send_message(session->con, buf);
-	receive_message(session->con, buf);
+	send_message(session->con, buf, PACKET_LENGTH);
+	receive_message(session->con, buf, PACKET_LENGTH);
 
 	ListIteratorADT iter = get_iterator(screenings);
 
@@ -166,18 +166,18 @@ int send_screenings(ClientSession session, ListADT screenings){
 
 		strcpy(&buf[5], data.id);
 
-		send_message(session->con, buf);
-		receive_message(session->con, buf);
+		send_message(session->con, buf, PACKET_LENGTH);
+		receive_message(session->con, buf, PACKET_LENGTH);
 
 	}
 	
 	if(buf[0] == TRANSACTION_NEXT){
 		buf[0] = TRANSACTION_END;
-		send_message(session->con, buf);	
+		send_message(session->con, buf, PACKET_LENGTH);	
 	} else {
 		//El cliente cancelo la transacción, mando acknowledgement
 		buf[0] = OK;
-		send_message(session->con, buf);
+		send_message(session->con, buf, PACKET_LENGTH);
 	}
 
 	destroy_iterator(iter);
@@ -193,8 +193,8 @@ int send_movies(ClientSession session, ListADT movies){
 	buf[0] = TRANSACTION_BEGIN;
 	buf[1] = count;
 		
-	send_message(session->con, buf);
-	receive_message(session->con, buf);
+	send_message(session->con, buf, PACKET_LENGTH);
+	receive_message(session->con, buf, PACKET_LENGTH);
 
 	ListIteratorADT iter = get_iterator(movies);
 
@@ -206,17 +206,17 @@ int send_movies(ClientSession session, ListADT movies){
 		strcpy(&buf[1], info.name);
 		strcpy(&buf[1+strlen(&buf[1])+1], info.description);
 
-		send_message(session->con, buf);
-		receive_message(session->con, buf);
+		send_message(session->con, buf, PACKET_LENGTH);
+		receive_message(session->con, buf, PACKET_LENGTH);
 	}
 	
 	if(buf[0] == TRANSACTION_NEXT){
 		buf[0] = TRANSACTION_END;
-		send_message(session->con, buf);	
+		send_message(session->con, buf, PACKET_LENGTH);	
 	} else {
 		//El cliente cerro la conexion, mando acknowledgement
 		buf[0] = OK;
-		send_message(session->con, buf);
+		send_message(session->con, buf, PACKET_LENGTH);
 	}
 
 	destroy_iterator(iter);
@@ -234,8 +234,8 @@ int send_tickets(ClientSession session, ListADT tickets){
 	buf[0] = TRANSACTION_BEGIN;
 	buf[1] = count;
 		
-	send_message(session->con, buf);
-	receive_message(session->con, buf);
+	send_message(session->con, buf, PACKET_LENGTH);
+	receive_message(session->con, buf, PACKET_LENGTH);
 
 	ListIteratorADT iter = get_iterator(tickets);
 
@@ -256,17 +256,17 @@ int send_tickets(ClientSession session, ListADT tickets){
 		strcpy(&buf[6+len+1], ticket.screening.movie);
 
 
-		send_message(session->con, buf);
-		receive_message(session->con, buf);
+		send_message(session->con, buf, PACKET_LENGTH);
+		receive_message(session->con, buf, PACKET_LENGTH);
 	}
 	
 	if(buf[0] == TRANSACTION_NEXT){
 		buf[0] = TRANSACTION_END;
-		send_message(session->con, buf);	
+		send_message(session->con, buf, PACKET_LENGTH);	
 	} else {
 		//El cliente cerro la conexion, mando acknowledgement
 		buf[0] = OK;
-		send_message(session->con, buf);
+		send_message(session->con, buf, PACKET_LENGTH);
 	}
 
 	destroy_iterator(iter);
@@ -281,7 +281,7 @@ int send_seats(ClientSession session, char* seats, int size){
 	char buf[PACKET_LENGTH];
 	buf[0] = OK;
 	memcpy(&buf[1], seats, size);
-	send_message(session->con, buf);
+	send_message(session->con, buf, PACKET_LENGTH);
 	return 1;
 }
 
@@ -298,7 +298,7 @@ void client_send_error(ClientSession cli, error_t error){
 	char buf[PACKET_LENGTH];
 	buf[0] = ERROR;
 	buf[1] = get_error_code(error);
-	send_message(cli->con, buf);
+	send_message(cli->con, buf, PACKET_LENGTH);
 }
 
 
@@ -306,5 +306,5 @@ void client_send_error(ClientSession cli, error_t error){
 void client_send_ok(ClientSession cli){
 	char buf[PACKET_LENGTH] = {0};
 	buf[0] = OK;
-	send_message(cli->con, buf);
+	send_message(cli->con, buf, PACKET_LENGTH);
 }

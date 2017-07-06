@@ -1,6 +1,8 @@
 #ifndef __proto_h
 #define __proto_h
 
+#define PACKET_LENGTH 512
+
 #define OK							20
 #define ERROR						30
 #define ERR_UNKNOWN   				31
