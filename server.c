@@ -73,7 +73,7 @@ int main(int argc, char*argv[]){
 		ClientSession cli = wait_client(server);
 
         if(cli != NULL){
-          srv_log("New connection");
+          srv_log("[CLIENT] New connection");
 		  new_thread(cli);
        
         } else {
