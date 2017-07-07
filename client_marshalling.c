@@ -249,7 +249,9 @@ ListADT get_screenings(ClientInstance instance, MovieInfo* movie){
 		s.month = buf[2];
 		s.slot = buf[3];
 		s.sala = buf[4];
+
 		strcpy(s.id, &buf[5]);
+		strcpy(s.movie, movie->name); // Para completitud
 		add_to_list(screenings, &s);
 
 		buf[0] = TRANSACTION_NEXT;

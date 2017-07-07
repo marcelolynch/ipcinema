@@ -180,42 +180,43 @@ int showMovies(ListADT movies){
 
 int showSeats(char seats[]){
 	while(1){
-	int i,j,row,col;
-	printf("\n\n Choose a seat. Seats marked [X] are not available \n\n");
-	printf("   1   2   3   4   5   6   7   8 \n");
-	for (i = 0; i < HALL_ROWS; ++i){
-		printf("%d ",i+1 );
-		for (j = 0; j < HALL_COLS; ++j)
-		{
-			char c;
-			if(seats[i*HALL_COLS+j]==1){
-				c='X';
-			}else{
-				c=' ';
+		int i,j,row,col;
+		printf("\n\n Choose a seat. Seats marked [X] are not available \n\n");
+		printf("   1   2   3   4   5   6   7   8 \n");
+		for (i = 0; i < HALL_ROWS; ++i){
+			printf("%d ",i+1 );
+			for (j = 0; j < HALL_COLS; ++j)
+			{
+				char c;
+				if(seats[i*HALL_COLS+j]==1){
+					c='X';
+				}else{
+					c=' ';
+				}
+				printf("[%c] ",c);
 			}
-			printf("[%c] ",c);
+			printf("\n");
 		}
-		printf("\n");
-	}
-	printf("\nSelect row and column: ");
-	if(scanf("%d %d",&row,&col)==2 && row>0 && row<=HALL_ROWS && col>0 && col<=HALL_COLS){
-				col-=1;
-				row-=1;
-		if(seats[row*HALL_COLS+col]==0){
-			clearBuffer();
-			return row*HALL_COLS+col;
-		}else{
-			printf("Seat is already taken\n");
+
+		printf("\nSelect row and column (0 in row or column to cancel): ");
+		if(scanf("%d %d",&row,&col)==2 && row>=0 && row<=HALL_ROWS && col>=0 && col<=HALL_COLS){
+			
+			if(row == 0 || col == 0){
+				clearBuffer();
+				return 0;
+			}
+
+			col-=1;
+			row-=1;
+			if(seats[row*HALL_COLS+col]==0){
+				clearBuffer();
+				return row*HALL_COLS+col;
+			}else{
+				printf("Seat is already taken\n");
+			}
 		}
-	}else{
-		printf("Not a valid. Enter row col\n");
+		clearBuffer();
 	}
-
-	
-	clearBuffer();
-}
-
-
 }
 
 int showAdminOptions(){
@@ -382,7 +383,11 @@ void startReservation(ClientInstance instance, char name[]){
 		char * seats= get_hall(instance, chosen_screening.id);
 		//int seat;
 		char chosen_seat = showSeats(seats);
-
+	
+		if(chosen_seat == 0){
+			printf("\nOperation cancelled");
+			return;
+		}
 		print_ticket(chosen_screening, chosen_seat);
 
 		if(askYN("Confirm purchase?")){
