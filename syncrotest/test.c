@@ -36,23 +36,19 @@ int main(void){
 	srand(time(0));
 
 	synchro_init();
-
 	int i = 0;
-	while(i++ < 15){
-		pthread_t thread;
+	pthread_t threads[15];
 
-    	int creation = pthread_create(&thread, NULL, thread_work, NULL);
-  
-    	if(creation == 0){
-    	    pthread_detach(thread);
-    	}
-    
-
+	while(i < 15){
+    	pthread_create(&threads[i++], NULL, thread_work, NULL); 	
 	}
 
-	while(i++){
-		sleep(i);
+	i=0;
+	while(i < 15){
+		pthread_join(threads[i++], NULL);
 	}
+
+	return 0;
 }
 
 
