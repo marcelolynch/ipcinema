@@ -203,7 +203,7 @@ int showSeats(char seats[]){
 			
 			if(row == 0 || col == 0){
 				clearBuffer();
-				return 0;
+				return -1;
 			}
 
 			col-=1;
@@ -382,9 +382,9 @@ void startReservation(ClientInstance instance, char name[]){
 		// get hall from db
 		char * seats= get_hall(instance, chosen_screening.id);
 		//int seat;
-		char chosen_seat = showSeats(seats);
+		signed char chosen_seat = showSeats(seats);
 	
-		if(chosen_seat == 0){
+		if(chosen_seat < 0){
 			printf("\nOperation cancelled");
 			return;
 		}
@@ -555,7 +555,7 @@ void startAdministrator(ClientInstance instance){
 					printf(" An error ocurred. Try again later\n");
 				}
 			}
-		}else{
+		} else {
 			printf(" Operation cancelled\n");
 		}
 
