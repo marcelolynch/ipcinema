@@ -135,7 +135,7 @@ void showMoviesOnly(ListADT movies){
 
 	for(i=0; iter_has_next(iter); i++){
 		iter_get_next(iter, &movie);
-		printf("\n%d - %s\n",i+1, movie.name);
+		printf("\n%d - \"%s\"\n",i+1, movie.name);
 		printf("\t %s \n", movie.description);
 	}
 
@@ -362,11 +362,11 @@ void startReservation(ClientInstance instance, char name[]){
 		if(list_length(screenings) == 0){
 			destroy_list(movies);
 			destroy_list(screenings);
-			printf(" No screenings available for %s", chosen_movie.name);
+			printf(" No screenings available for \"%s\"", chosen_movie.name);
 			return;
 		}
 
-		printf("\n Choose a screening for %s \n\n", chosen_movie.name);
+		printf("\n Choose a screening for \"%s\" \n\n", chosen_movie.name);
 
 		int chosenSc = showScreenings(screenings);
 
@@ -460,6 +460,7 @@ int cancelReservation(ListADT list){
 
 void startClient(ClientInstance instance, char name []){
 	while(1){
+
 		printf("************************************\n");
 		printf("**                                **\n");
 		printf("**            ipCinemas           **\n");
@@ -468,12 +469,13 @@ void startClient(ClientInstance instance, char name []){
 
 		printf("\n Welcome, %s!\n",name );
 		int option =showClientOptions();
+
 		if(option == RESERVE_MOVIE){
 
 			startReservation(instance,name);
 			require_keypress();
 
-		}else if(option == VIEW_RESERVATIONS){
+		} else if(option == VIEW_RESERVATIONS) {
 
 			ListADT reserv=get_tickets(instance, name, 0);
 			
@@ -495,7 +497,7 @@ void startClient(ClientInstance instance, char name []){
 
 			require_keypress();
 
-		}else if (option == CANCEL_RESERVATION){
+		} else if (option == CANCEL_RESERVATION) {
 			ListADT reserv= get_tickets(instance, name, 0);
 			
 			if(list_length(reserv) > 0){
@@ -533,11 +535,13 @@ void startAdministrator(ClientInstance instance){
 		printf("************************************\n");
 
 	int option =showAdminOptions();
+
+
 	if(option == ADD_MOVIE){
 		MovieInfo movie;
 		getMovieInfo(movie.name,movie.description);
 		
-		printf(" Name: %s\n",movie.name );
+		printf(" Name: \"%s\"\n",movie.name );
 		printf(" Description: %s\n",movie.description );
 		
 		
@@ -554,7 +558,9 @@ void startAdministrator(ClientInstance instance){
 		}else{
 			printf(" Operation cancelled\n");
 		}
-	}else if (option == ADD_SCREENING){
+
+
+	} else if (option == ADD_SCREENING){
 		ScreeningInfo screening;
 		ListADT movies= get_movies(instance);
 
@@ -594,7 +600,9 @@ void startAdministrator(ClientInstance instance){
 			printf("Operation cancelled\n");
 		}
 		
-	}else if(option == DEL_MOVIE){
+
+
+	} else if(option == DEL_MOVIE){
 		
 		ListADT movies = get_movies(instance);
 
@@ -604,7 +612,7 @@ void startAdministrator(ClientInstance instance){
 			
 			MovieInfo chosen_movie;
 			get_from_list(movies, chosenM, &chosen_movie);
-			printf("\n About to delete: %s\n", chosen_movie.name);
+			printf("\n About to delete: \"%s\"\n", chosen_movie.name);
 			if(askYN("Do you really want to delete this movie?")){
 				printf(" Deleting movie ...\n");
 				delete_movie(instance, chosen_movie.name);
@@ -615,7 +623,9 @@ void startAdministrator(ClientInstance instance){
 			printf("\nWe don't have any movies showing right now.\n");
 		}
 
-	}else if(option == DEL_SCREENING){
+
+
+	} else if(option == DEL_SCREENING){
 		ListADT movies = get_movies(instance);
 		
 		if(list_length(movies) > 0){
@@ -650,17 +660,20 @@ void startAdministrator(ClientInstance instance){
 	
 		destroy_list(movies);
 	
-	}else if(option == EXIT_ADMIN){
 
+	} else if(option == EXIT_ADMIN){
 		return;
 
-	}else if(option == SHOW_MOVIES){
+
+	} else if(option == SHOW_MOVIES){
 
 		ListADT movies = get_movies(instance);
 		showMoviesOnly(movies);
 		destroy_list(movies);
 
 		require_keypress();
+
+	
 
 	} else if(option == SHOW_SCREENING){
 
@@ -674,7 +687,7 @@ void startAdministrator(ClientInstance instance){
 			printf("\nThere are no screenings for that movie.\n");
 
 		} else {
-			printf("\nScreenings for %s:\n\n", chosen_movie.name);
+			printf("\nScreenings for \"%s\":\n\n", chosen_movie.name);
 			showScreeningsOnly(screenings);
 
 		}

@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -g -I $(INCLUDE_DIR)
+CFLAGS = -Wall -pedantic -g -I $(INCLUDE_DIR)
 DEBUGFLAG = -D DEBUG
 
 INCLUDE_DIR = ./includes
