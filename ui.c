@@ -42,8 +42,10 @@ while(1){
 	//printf("client type %d\n",ans);
 	if(ans== CLIENT){
 		printf("\n----- Logging in as client ----- \n");
-		char name[CLIENT_NAME_LEN+1];
-		getString("What's your name?: ",name, CLIENT_NAME_LEN);
+		char name[CLIENT_NAME_LEN+1] = {0};
+		while(strlen(name) == 0){
+			getString("What's your name?: ",name, CLIENT_NAME_LEN);
+		}
 		startClient(instance, name);
 	} else if (ans == ADMIN){
 		printf("\n----- Logging in as administrator ----- \n");
@@ -199,13 +201,7 @@ int showSeats(char seats[]){
 		}
 
 		printf("\nSelect row and column (0 in row or column to cancel): ");
-		if(scanf("%d %d",&row,&col)==2 && row>=0 && row<=HALL_ROWS && col>=0 && col<=HALL_COLS){
-			
-			if(row == 0 || col == 0){
-				clearBuffer();
-				return -1;
-			}
-
+		if(scanf("%d %d",&row,&col)==2 && row>0 && row<=HALL_ROWS && col>0 && col<=HALL_COLS ){
 			col-=1;
 			row-=1;
 			if(seats[row*HALL_COLS+col]==0){
@@ -216,6 +212,9 @@ int showSeats(char seats[]){
 			}
 		}
 		clearBuffer();
+		if(row == 0 || col == 0){
+			return -1;
+		}
 	}
 }
 
