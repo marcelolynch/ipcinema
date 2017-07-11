@@ -84,29 +84,17 @@ static void leave_reader(){
 void enter_critical(synchro_type type){
 	if(type == READER){
 		enter_reader();
-		#ifdef DEBUG
-		printf("Enter reader\n");
-		#endif
 	}
 	else{
 		enter_writer();
-		#ifdef DEBUG
-		printf("Enter writer\n");
-		#endif
 	}
 }
 
 void leave_critical(synchro_type type){
 	if(type == READER){
-		#ifdef DEBUG
-		printf("Reader leaving\n");
-		#endif
 		leave_reader();
 	}
 	else{
-		#ifdef DEBUG
-		printf("Writer leaving\n");
-		#endif
 		leave_writer();
 	}
 }
